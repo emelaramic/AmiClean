@@ -1,0 +1,9 @@
+# .NET — build i lokalne datoteke (detalji u root .gitignore)
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+.vs/
+*.user
+*.suo
+appsettings.Development.json
+appsettings.Local.json

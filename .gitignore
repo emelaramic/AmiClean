@@ -1,0 +1,54 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- IDE ---
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# --- .NET build output ---
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+*.nupkg
+
+# --- .NET local / secrets ---
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/secrets.json
+.env
+.env.*
+*.pfx
+
+# --- NuGet ---
+project.lock.json
+project.fragment.lock.json
+**/packages/
+
+# --- Flutter / Dart (AmiClean-App) ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+**/build/
+**/coverage/
+*.iml
+
+# --- Test / tooling ---
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# --- Cursor / VS Code (user-specific) ---
+.history/
