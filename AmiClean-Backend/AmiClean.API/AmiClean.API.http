@@ -1,0 +1,6 @@
+@AmiClean.API_HostAddress = http://localhost:5230
+
+GET {{AmiClean.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

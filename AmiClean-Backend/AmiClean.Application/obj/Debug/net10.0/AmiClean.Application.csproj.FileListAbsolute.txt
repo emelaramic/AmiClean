@@ -1,0 +1,15 @@
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\bin\Debug\net10.0\AmiClean.Application.deps.json
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\bin\Debug\net10.0\AmiClean.Application.dll
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\bin\Debug\net10.0\AmiClean.Application.pdb
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\bin\Debug\net10.0\AmiClean.Domain.dll
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\bin\Debug\net10.0\AmiClean.Domain.pdb
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.csproj.AssemblyReference.cache
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.GeneratedMSBuildEditorConfig.editorconfig
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.AssemblyInfoInputs.cache
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.AssemblyInfo.cs
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.csproj.CoreCompileInputs.cache
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.673DFB62.Up2Date
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.dll
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\refint\AmiClean.Application.dll
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\AmiClean.Application.pdb
+c:\projects\AmiClean\AmiClean-Backend\AmiClean.Application\obj\Debug\net10.0\ref\AmiClean.Application.dll

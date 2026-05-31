@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AmiClean.API/AmiClean.API.csproj" />
+  <Project Path="AmiClean.Application/AmiClean.Application.csproj" />
+  <Project Path="AmiClean.Domain/AmiClean.Domain.csproj" />
+  <Project Path="AmiClean.Infrastructure/AmiClean.Infrastructure.csproj" />
+</Solution>
