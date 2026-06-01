@@ -26,4 +26,5 @@ class ApiConfig {
   static String get prijavaZaposlenikUri => '$baseUrl/api/Zaposlenik/Prijava';
   static String get getKategorijeUri => '$baseUrl/api/Catalog/GetKategorije';
   static String get getKatalogUri => '$baseUrl/api/Catalog/GetKatalog';
+  static String get kreirajNarudzbuUri => '$baseUrl/api/Narudzba/KreirajNarudzbu';
 }

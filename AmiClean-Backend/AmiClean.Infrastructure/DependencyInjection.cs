@@ -1,7 +1,9 @@
 using AmiClean.Application.Auth.Interfaces;
 using AmiClean.Application.Catalog.Interfaces;
+using AmiClean.Application.Orders.Interfaces;
 using AmiClean.Infrastructure.Auth;
 using AmiClean.Infrastructure.Catalog;
+using AmiClean.Infrastructure.Orders;
 using AmiClean.Infrastructure.Persistence;
 using AmiClean.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, Sha256PasswordHasher>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICatalogService, CatalogService>();
+        services.AddScoped<INarudzbaService, NarudzbaService>();
 
         return services;
     }

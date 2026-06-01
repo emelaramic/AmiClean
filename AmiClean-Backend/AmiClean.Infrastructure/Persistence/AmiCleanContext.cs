@@ -77,6 +77,7 @@ public class AmiCleanContext : DbContext
         {
             e.ToTable("Narudzba");
             e.HasKey(x => x.ID_Narudzbe);
+            e.Property(x => x.Nacin_Predaje).HasMaxLength(50);
             e.Property(x => x.Ukupna_Cijena).HasColumnType("decimal(10, 2)");
             e.Property(x => x.Popust_Iznos).HasColumnType("decimal(10, 2)");
             e.HasOne(x => x.Korisnik).WithMany(k => k.Narudzbe).HasForeignKey(x => x.FK_Korisnik);

@@ -100,6 +100,7 @@ CREATE TABLE Narudzba (
     FK_Primio_Zaposlenik INT NULL,
     FK_Status INT NOT NULL,
     Kanal NVARCHAR(50) NOT NULL,
+    Nacin_Predaje NVARCHAR(50) NOT NULL DEFAULT N'DonosUCistionicu',
     Nacin_Zavrsetka NVARCHAR(50) NOT NULL,
     Datum_Prijema DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     Rok_Zavrsetka DATETIME2 NULL,
@@ -194,10 +195,10 @@ GO
 
 -- Početni podaci (šifrarnici)
 INSERT INTO StatusNarudzbe (Naziv, Redoslijed) VALUES
-(N'Primljena', 1), (N'U obradi', 2), (N'Djelomicno gotova', 3), (N'Gotova', 4), (N'Preuzeta', 5), (N'Otkazana', 6);
+(N'Kreirana', 0), (N'Primljena', 1), (N'U obradi', 2), (N'Djelomicno gotova', 3), (N'Gotova', 4), (N'Preuzeta', 5), (N'Otkazana', 6);
 
 INSERT INTO StatusStavke (Naziv) VALUES
-(N'Primljena'), (N'U obradi'), (N'Gotova'), (N'Isporucena');
+(N'Kreirana'), (N'Primljena'), (N'U obradi'), (N'Gotova'), (N'Isporucena');
 
 INSERT INTO StatusPlacanja (Naziv) VALUES
 (N'Na cekanju'), (N'Djelomicno placeno'), (N'Placeno'), (N'Stornirano');

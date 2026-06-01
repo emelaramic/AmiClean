@@ -1,7 +1,10 @@
+using AmiClean.Application.Orders.Dtos;
+using AmiClean.Application.Orders.Interfaces;
 using AmiClean.Domain.Entities;
 using AmiClean.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AmiClean.Application.Orders;
 
 namespace AmiClean.API.Controllers;
 
@@ -10,14 +13,32 @@ namespace AmiClean.API.Controllers;
 public class NarudzbaController : ControllerBase
 {
     private readonly AmiCleanContext _context;
+    private readonly INarudzbaService _narudzbaService;
 
-    public NarudzbaController(AmiCleanContext context)
+    public NarudzbaController(AmiCleanContext context, INarudzbaService narudzbaService)
     {
         _context = context;
+        _narudzbaService = narudzbaService;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Narudzba>>> GetNarudzbe()
+    /// <summary>
+    /// Kreira narudžbu iz aplikacije (košarica, način predaje, stavke + usluge).
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<NarudzbaKreiranaDto>> KreirajNarudzbu(KreirajNarudzbuRequest request)
+    {
+        try
+        {
+            var rezultat = await _narudzbaService.KreirajNarudzbuAsync(request);
+            return Ok(rezultat);
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]    public async Task<ActionResult<IEnumerable<Narudzba>>> GetNarudzbe()
     {
         return await _context.Narudzbe
             .AsNoTracking()

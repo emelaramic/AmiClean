@@ -36,6 +36,16 @@ class UslugaCijena {
     return min;
   }
 
+  String cijenaTekstZaKategoriju(String kategorija) {
+    if (kategorija == 'Tepisi') {
+      final iznos = cijena == cijena.roundToDouble()
+          ? cijena.toInt().toString()
+          : cijena.toStringAsFixed(2);
+      return '$iznos KM/m²';
+    }
+    return cijenaTekst;
+  }
+
   String _formatKm(double value) {
     if (value == value.roundToDouble()) {
       return '${value.toInt()} KM';

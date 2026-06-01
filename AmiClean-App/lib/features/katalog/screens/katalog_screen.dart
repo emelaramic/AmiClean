@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
-import '../models/artikal_katalog.dart';
-import '../services/catalog_service.dart';
+import '../../katalog/models/artikal_katalog.dart';
+import '../../katalog/services/catalog_service.dart';
+import '../../katalog/utils/ugao_artikli.dart';
+import '../../katalog/widgets/artikal_odabir_panel.dart';
+import '../../katalog/widgets/tepih_dimenzije_polja.dart';
 
 class KatalogScreen extends StatefulWidget {
   const KatalogScreen({super.key});
@@ -19,7 +22,8 @@ class _KatalogScreenState extends State<KatalogScreen> {
   List<String> _kategorije = [];
   List<ArtikalKatalog> _artikli = [];
   String? _odabranaKategorija;
-  ArtikalKatalog? _odabraniArtikal;
+  ArtikalIzbor? _odabraniIzbor;
+  String? _odabranaUgaoVarijanta;
   bool _loading = true;
   String? _greska;
 
@@ -80,12 +84,9 @@ class _KatalogScreenState extends State<KatalogScreen> {
   void _onKategorijaChanged(String? kategorija) {
     setState(() {
       _odabranaKategorija = kategorija;
-      _odabraniArtikal = null;
+      _odabraniIzbor = null;
+      _odabranaUgaoVarijanta = null;
     });
-  }
-
-  void _onArtikalChanged(ArtikalKatalog? artikal) {
-    setState(() => _odabraniArtikal = artikal);
   }
 
   @override
@@ -139,37 +140,21 @@ class _KatalogScreenState extends State<KatalogScreen> {
               .toList(),
           onChanged: _onKategorijaChanged,
         ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<ArtikalKatalog>(
-          initialValue: _odabraniArtikal,
-          decoration: const InputDecoration(
-            labelText: 'Artikal',
-            border: OutlineInputBorder(),
-          ),
-          hint: Text(
-            _odabranaKategorija == null
-                ? 'Prvo odaberite kategoriju'
-                : 'Odaberite artikal',
-          ),
-          items: _artikliZaKategoriju
-              .map(
-                (a) => DropdownMenuItem(value: a, child: Text(a.naziv)),
-              )
-              .toList(),
-          onChanged:
-              _odabranaKategorija == null ? null : _onArtikalChanged,
-        ),
-        if (_odabraniArtikal?.opis != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            _odabraniArtikal!.opis!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+        if (_odabranaKategorija != null) ...[
+          const SizedBox(height: 16),
+          ArtikalOdabirPanel(
+            artikliZaKategoriju: _artikliZaKategoriju,
+            sviArtikli: _artikli,
+            odabraniIzbor: _odabraniIzbor,
+            odabranaUgaoVarijanta: _odabranaUgaoVarijanta,
+            kategorija: _odabranaKategorija,
+            onIzborChanged: (ArtikalIzbor? izbor) =>
+                setState(() => _odabraniIzbor = izbor),
+            onUgaoVarijantaChanged: (String? v) =>
+                setState(() => _odabranaUgaoVarijanta = v),
+            uslugeBuilder: _buildUsluge,
           ),
         ],
-        const SizedBox(height: 24),
-        if (_odabraniArtikal != null) _buildUsluge(_odabraniArtikal!),
       ],
     );
   }
@@ -187,25 +172,17 @@ class _KatalogScreenState extends State<KatalogScreen> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
-        ...artikal.usluge.map(_buildUslugaTile),
+        ...artikal.usluge.map((u) => _buildUslugaTile(u, artikal.kategorija)),
       ],
     );
   }
 
-  Widget _buildUslugaTile(UslugaCijena usluga) {
+  Widget _buildUslugaTile(UslugaCijena usluga, String kategorija) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(usluga.uslugaNaziv),
-        trailing: Text(
-          usluga.cijenaTekst,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        subtitle: usluga.cijenaOpis == null
-            ? null
-            : Text(usluga.cijenaOpis!),
+        trailing: cijenaUslugeWidget(usluga, kategorija: kategorija),
       ),
     );
   }
