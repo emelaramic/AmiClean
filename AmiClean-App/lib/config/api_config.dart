@@ -27,4 +27,13 @@ class ApiConfig {
   static String get getKategorijeUri => '$baseUrl/api/Catalog/GetKategorije';
   static String get getKatalogUri => '$baseUrl/api/Catalog/GetKatalog';
   static String get kreirajNarudzbuUri => '$baseUrl/api/Narudzba/KreirajNarudzbu';
+
+  static String getMojeNarudzbeUri(int korisnikId) =>
+      '$baseUrl/api/Narudzba/GetMojeNarudzbe?korisnikId=$korisnikId';
+
+  static String getDetaljNarudzbeUri({
+    required int narudzbaId,
+    required int korisnikId,
+  }) =>
+      '$baseUrl/api/Narudzba/GetDetaljNarudzbe?narudzbaId=$narudzbaId&korisnikId=$korisnikId';
 }

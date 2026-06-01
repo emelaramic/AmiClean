@@ -42,3 +42,13 @@ public static class NacinZavrsetkaVrijednosti
     public const string PreuzimanjeURadnji = "PreuzimanjeURadnji";
     public const string Dostava = "Dostava";
 }
+
+public static class NacinPredajeNazivi
+{
+    public static string ZaPrikaz(string nacinPredaje) => nacinPredaje switch
+    {
+        NacinPredajeVrijednosti.DonosUCistionicu => "Donijet ću u čistionicu",
+        NacinPredajeVrijednosti.PreuzimanjeIDostava => "Preuzimanje i dostava",
+        _ => nacinPredaje,
+    };
+}

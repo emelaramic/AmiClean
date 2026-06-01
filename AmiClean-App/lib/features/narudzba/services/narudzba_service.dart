@@ -3,11 +3,34 @@ import '../../../core/api/api_client.dart';
 import '../models/cart_stavka.dart';
 import '../models/nacin_predaje.dart';
 import '../models/narudzba_kreirana.dart';
+import '../models/narudzba_pregled.dart';
 
 class NarudzbaService {
   NarudzbaService({required ApiClient apiClient}) : _apiClient = apiClient;
 
   final ApiClient _apiClient;
+
+  Future<List<NarudzbaPregled>> getMojeNarudzbe(int korisnikId) async {
+    final payload = await _apiClient.getList(
+      ApiConfig.getMojeNarudzbeUri(korisnikId),
+    );
+    return payload
+        .map((e) => NarudzbaPregled.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<NarudzbaDetalj> getDetaljNarudzbe({
+    required int narudzbaId,
+    required int korisnikId,
+  }) async {
+    final payload = await _apiClient.get(
+      ApiConfig.getDetaljNarudzbeUri(
+        narudzbaId: narudzbaId,
+        korisnikId: korisnikId,
+      ),
+    );
+    return NarudzbaDetalj.fromJson(payload);
+  }
 
   Future<NarudzbaKreirana> kreirajNarudzbu({
     required int korisnikId,

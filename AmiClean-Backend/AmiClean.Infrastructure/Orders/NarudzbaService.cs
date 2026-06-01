@@ -218,6 +218,101 @@ public class NarudzbaService : INarudzbaService
         return rezultat;
     }
 
+    public async Task<IReadOnlyList<NarudzbaPregledDto>> GetNarudzbeKorisnikaAsync(
+        int korisnikId,
+        CancellationToken cancellationToken = default)
+    {
+        if (korisnikId <= 0)
+            throw new NarudzbaValidationException("KorisnikId nije ispravan.");
+
+        var postoji = await _context.Korisnici
+            .AsNoTracking()
+            .AnyAsync(k => k.ID_Korisnika == korisnikId && k.Aktivan, cancellationToken);
+
+        if (!postoji)
+            throw new NarudzbaValidationException("Korisnik nije pronađen.");
+
+        var narudzbe = await _context.Narudzbe
+            .AsNoTracking()
+            .Where(n => n.FK_Korisnik == korisnikId)
+            .OrderByDescending(n => n.Datum_Prijema)
+            .Select(n => new NarudzbaPregledDto
+            {
+                Id = n.ID_Narudzbe,
+                DatumKreiranja = n.Datum_Prijema,
+                StatusNaziv = n.Status.Naziv,
+                NacinPredaje = n.Nacin_Predaje,
+                UkupnaCijena = n.Ukupna_Cijena,
+                BrojStavki = n.Stavke.Count,
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var n in narudzbe)
+            n.NacinPredajeNaziv = NacinPredajeNazivi.ZaPrikaz(n.NacinPredaje);
+
+        return narudzbe;
+    }
+
+    public async Task<NarudzbaDetaljDto> GetDetaljNarudzbeAsync(
+        int narudzbaId,
+        int korisnikId,
+        CancellationToken cancellationToken = default)
+    {
+        if (narudzbaId <= 0 || korisnikId <= 0)
+            throw new NarudzbaValidationException("Identifikatori nisu ispravni.");
+
+        var narudzba = await _context.Narudzbe
+            .AsNoTracking()
+            .Include(n => n.Status)
+            .Include(n => n.Stavke).ThenInclude(s => s.Artikal)
+            .Include(n => n.Stavke).ThenInclude(s => s.Usluge).ThenInclude(u => u.Usluga)
+            .Include(n => n.Logistike)
+            .FirstOrDefaultAsync(
+                n => n.ID_Narudzbe == narudzbaId && n.FK_Korisnik == korisnikId,
+                cancellationToken);
+
+        if (narudzba == null)
+            throw new NarudzbaValidationException("Narudžba nije pronađena.");
+
+        var adresa = narudzba.Logistike
+            .FirstOrDefault(l => l.Tip == LogistikaTipovi.Preuzimanje)
+            ?.Adresa;
+
+        return new NarudzbaDetaljDto
+        {
+            Id = narudzba.ID_Narudzbe,
+            DatumKreiranja = narudzba.Datum_Prijema,
+            StatusNaziv = narudzba.Status.Naziv,
+            NacinPredaje = narudzba.Nacin_Predaje,
+            NacinPredajeNaziv = NacinPredajeNazivi.ZaPrikaz(narudzba.Nacin_Predaje),
+            UkupnaCijena = narudzba.Ukupna_Cijena,
+            Napomena = narudzba.Napomena,
+            AdresaPreuzimanja = adresa,
+            RokZavrsetka = narudzba.Rok_Zavrsetka,
+            Stavke = narudzba.Stavke
+                .OrderBy(s => s.ID_Stavke)
+                .Select(s => new StavkaPregledDto
+                {
+                    Id = s.ID_Stavke,
+                    ArtikalNaziv = s.Artikal.Naziv,
+                    Kategorija = s.Artikal.Kategorija,
+                    Kolicina = s.Kolicina,
+                    CijenaJedinicna = s.Cijena_Jedinicna,
+                    Ukupno = s.Kolicina * s.Cijena_Jedinicna,
+                    Napomena = s.Napomena,
+                    Usluge = s.Usluge
+                        .OrderBy(u => u.Usluga.Naziv)
+                        .Select(u => new StavkaUslugaPregledDto
+                        {
+                            UslugaNaziv = u.Usluga.Naziv,
+                            Cijena = u.Cijena_Usluge,
+                        })
+                        .ToList(),
+                })
+                .ToList(),
+        };
+    }
+
     private sealed class PripremenaStavka
     {
         public int ArtikalId { get; init; }

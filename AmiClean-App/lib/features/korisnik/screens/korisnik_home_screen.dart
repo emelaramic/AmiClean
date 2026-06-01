@@ -4,6 +4,7 @@ import '../../../core/auth/auth_session.dart';
 import '../../../core/cart/cart_session.dart';
 import '../../katalog/screens/katalog_screen.dart';
 import '../../narudzba/screens/kosarica_screen.dart';
+import '../../narudzba/screens/moje_narudzbe_screen.dart';
 import '../../narudzba/screens/nova_narudzba_screen.dart';
 
 class KorisnikHomeScreen extends StatelessWidget {
@@ -91,6 +92,18 @@ class KorisnikHomeScreen extends StatelessWidget {
                     },
                     icon: const Icon(Icons.add_shopping_cart),
                     label: const Text('Nova narudžba'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MojeNarudzbeScreen(session: session),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('Moje narudžbe'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
