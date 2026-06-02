@@ -2,6 +2,7 @@ import '../../../config/api_config.dart';
 import '../../../core/api/api_client.dart';
 import '../models/cart_stavka.dart';
 import '../models/nacin_predaje.dart';
+import '../models/narudzba_admin.dart';
 import '../models/narudzba_kreirana.dart';
 import '../models/narudzba_pregled.dart';
 
@@ -9,6 +10,36 @@ class NarudzbaService {
   NarudzbaService({required ApiClient apiClient}) : _apiClient = apiClient;
 
   final ApiClient _apiClient;
+
+  Future<List<NarudzbaAdminPregled>> getSveNarudzbe() async {
+    final payload = await _apiClient.getList(ApiConfig.getSveNarudzbeUri);
+    return payload
+        .map((e) => NarudzbaAdminPregled.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<NarudzbaAdminDetalj> getDetaljNarudzbeAdmin(int narudzbaId) async {
+    final payload = await _apiClient.get(
+      ApiConfig.getDetaljNarudzbeAdminUri(narudzbaId),
+    );
+    return NarudzbaAdminDetalj.fromJson(payload);
+  }
+
+  Future<NarudzbaStatusPromjena> primijeniNarudzbu({
+    required int narudzbaId,
+    required int zaposlenikId,
+    required DateTime rokZavrsetka,
+  }) async {
+    final payload = await _apiClient.post(
+      ApiConfig.primijeniNarudzbuUri,
+      {
+        'narudzbaId': narudzbaId,
+        'zaposlenikId': zaposlenikId,
+        'rokZavrsetka': rokZavrsetka.toIso8601String(),
+      },
+    );
+    return NarudzbaStatusPromjena.fromJson(payload);
+  }
 
   Future<List<NarudzbaPregled>> getMojeNarudzbe(int korisnikId) async {
     final payload = await _apiClient.getList(

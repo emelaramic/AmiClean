@@ -274,6 +274,141 @@ public class NarudzbaService : INarudzbaService
         if (narudzba == null)
             throw new NarudzbaValidationException("Narudžba nije pronađena.");
 
+        return MapDetaljDto(narudzba);
+    }
+
+    public async Task<IReadOnlyList<NarudzbaAdminPregledDto>> GetSveNarudzbeAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var narudzbe = await _context.Narudzbe
+            .AsNoTracking()
+            .OrderByDescending(n => n.Datum_Prijema)
+            .Select(n => new NarudzbaAdminPregledDto
+            {
+                Id = n.ID_Narudzbe,
+                DatumKreiranja = n.Datum_Prijema,
+                StatusNaziv = n.Status.Naziv,
+                NacinPredaje = n.Nacin_Predaje,
+                UkupnaCijena = n.Ukupna_Cijena,
+                BrojStavki = n.Stavke.Count,
+                KorisnikPunoIme = n.Korisnik.Ime + " " + n.Korisnik.Prezime,
+                KorisnikTelefon = n.Korisnik.Broj_Telefona,
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var n in narudzbe)
+            n.NacinPredajeNaziv = NacinPredajeNazivi.ZaPrikaz(n.NacinPredaje);
+
+        return narudzbe;
+    }
+
+    public async Task<NarudzbaAdminDetaljDto> GetDetaljNarudzbeAdminAsync(
+        int narudzbaId,
+        CancellationToken cancellationToken = default)
+    {
+        if (narudzbaId <= 0)
+            throw new NarudzbaValidationException("NarudzbaId nije ispravan.");
+
+        var narudzba = await UcitajNarudzbuZaDetaljAsync(narudzbaId, cancellationToken)
+            ?? throw new NarudzbaValidationException("Narudžba nije pronađena.");
+
+        var detalj = MapDetaljDto(narudzba);
+
+        return new NarudzbaAdminDetaljDto
+        {
+            Id = detalj.Id,
+            DatumKreiranja = detalj.DatumKreiranja,
+            StatusNaziv = detalj.StatusNaziv,
+            NacinPredaje = detalj.NacinPredaje,
+            NacinPredajeNaziv = detalj.NacinPredajeNaziv,
+            UkupnaCijena = detalj.UkupnaCijena,
+            Napomena = detalj.Napomena,
+            AdresaPreuzimanja = detalj.AdresaPreuzimanja,
+            RokZavrsetka = detalj.RokZavrsetka,
+            Stavke = detalj.Stavke,
+            KorisnikId = narudzba.FK_Korisnik,
+            KorisnikPunoIme = $"{narudzba.Korisnik.Ime} {narudzba.Korisnik.Prezime}",
+            KorisnikEmail = narudzba.Korisnik.Email,
+            KorisnikTelefon = narudzba.Korisnik.Broj_Telefona,
+            MozeSePrimijeti = narudzba.Status.Naziv == NarudzbaStatusi.Kreirana,
+        };
+    }
+
+    public async Task<NarudzbaStatusPromjenaDto> PrimijeniNarudzbuAsync(
+        PrimijeniNarudzbuRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.NarudzbaId <= 0 || request.ZaposlenikId <= 0)
+            throw new NarudzbaValidationException("Identifikatori nisu ispravni.");
+
+        if (request.RokZavrsetka.Date < DateTime.Today)
+            throw new NarudzbaValidationException("Rok završetka ne može biti u prošlosti.");
+
+        var zaposlenik = await _context.Zaposlenici
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                z => z.ID_Zaposlenika == request.ZaposlenikId && z.Aktivan,
+                cancellationToken)
+            ?? throw new NarudzbaValidationException("Zaposlenik nije pronađen.");
+
+        var narudzba = await _context.Narudzbe
+            .Include(n => n.Status)
+            .Include(n => n.Stavke)
+            .FirstOrDefaultAsync(n => n.ID_Narudzbe == request.NarudzbaId, cancellationToken)
+            ?? throw new NarudzbaValidationException("Narudžba nije pronađena.");
+
+        if (narudzba.Status.Naziv != NarudzbaStatusi.Kreirana)
+        {
+            throw new NarudzbaValidationException(
+                $"Narudžba se može primiti samo iz statusa '{NarudzbaStatusi.Kreirana}'.");
+        }
+
+        var statusPrimljena = await _context.StatusiNarudzbe
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Naziv == NarudzbaStatusi.Primljena, cancellationToken)
+            ?? throw new NarudzbaValidationException(
+                $"Status narudžbe '{NarudzbaStatusi.Primljena}' nije definisan u bazi.");
+
+        var statusStavkePrimljena = await _context.StatusiStavke
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Naziv == StavkaStatusi.Primljena, cancellationToken)
+            ?? throw new NarudzbaValidationException(
+                $"Status stavke '{StavkaStatusi.Primljena}' nije definisan u bazi.");
+
+        narudzba.FK_Status = statusPrimljena.ID_Statusa;
+        narudzba.FK_Primio_Zaposlenik = zaposlenik.ID_Zaposlenika;
+        narudzba.Rok_Zavrsetka = request.RokZavrsetka;
+
+        foreach (var stavka in narudzba.Stavke)
+            stavka.FK_Status = statusStavkePrimljena.ID_Statusa;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return new NarudzbaStatusPromjenaDto
+        {
+            Id = narudzba.ID_Narudzbe,
+            StatusNaziv = NarudzbaStatusi.Primljena,
+            RokZavrsetka = narudzba.Rok_Zavrsetka,
+            Poruka = "Narudžba je primljena u čistionici. Rok završetka je potvrđen.",
+        };
+    }
+
+    private async Task<Narudzba?> UcitajNarudzbuZaDetaljAsync(
+        int narudzbaId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Narudzbe
+            .AsNoTracking()
+            .Include(n => n.Korisnik)
+            .Include(n => n.Status)
+            .Include(n => n.Stavke).ThenInclude(s => s.Artikal)
+            .Include(n => n.Stavke).ThenInclude(s => s.Usluge).ThenInclude(u => u.Usluga)
+            .Include(n => n.Logistike)
+            .FirstOrDefaultAsync(n => n.ID_Narudzbe == narudzbaId, cancellationToken);
+    }
+
+    private static NarudzbaDetaljDto MapDetaljDto(Narudzba narudzba)
+    {
         var adresa = narudzba.Logistike
             .FirstOrDefault(l => l.Tip == LogistikaTipovi.Preuzimanje)
             ?.Adresa;

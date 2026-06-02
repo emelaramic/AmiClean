@@ -16,4 +16,15 @@ public interface INarudzbaService
         int narudzbaId,
         int korisnikId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<NarudzbaAdminPregledDto>> GetSveNarudzbeAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<NarudzbaAdminDetaljDto> GetDetaljNarudzbeAdminAsync(
+        int narudzbaId,
+        CancellationToken cancellationToken = default);
+
+    Task<NarudzbaStatusPromjenaDto> PrimijeniNarudzbuAsync(
+        PrimijeniNarudzbuRequest request,
+        CancellationToken cancellationToken = default);
 }

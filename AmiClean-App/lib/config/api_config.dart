@@ -36,4 +36,12 @@ class ApiConfig {
     required int korisnikId,
   }) =>
       '$baseUrl/api/Narudzba/GetDetaljNarudzbe?narudzbaId=$narudzbaId&korisnikId=$korisnikId';
+
+  static String get getSveNarudzbeUri => '$baseUrl/api/Narudzba/GetSveNarudzbe';
+
+  static String getDetaljNarudzbeAdminUri(int narudzbaId) =>
+      '$baseUrl/api/Narudzba/GetDetaljNarudzbeAdmin?narudzbaId=$narudzbaId';
+
+  static String get primijeniNarudzbuUri =>
+      '$baseUrl/api/Narudzba/PrimijeniNarudzbu';
 }

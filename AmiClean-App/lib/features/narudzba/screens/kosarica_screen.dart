@@ -87,13 +87,6 @@ class KosaricaScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Procijenjena cijena. Konačan iznos može varirati za artikle s rasponom cijena.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () {

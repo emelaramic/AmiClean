@@ -68,6 +68,47 @@ public class NarudzbaController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<NarudzbaAdminPregledDto>>> GetSveNarudzbe()
+    {
+        try
+        {
+            return Ok(await _narudzbaService.GetSveNarudzbeAsync());
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<NarudzbaAdminDetaljDto>> GetDetaljNarudzbeAdmin(
+        [FromQuery] int narudzbaId)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.GetDetaljNarudzbeAdminAsync(narudzbaId));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<NarudzbaStatusPromjenaDto>> PrimijeniNarudzbu(
+        PrimijeniNarudzbuRequest request)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.PrimijeniNarudzbuAsync(request));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<Narudzba>>> GetNarudzbe()
     {
         return await _context.Narudzbe

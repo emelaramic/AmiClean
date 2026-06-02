@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/auth/auth_session.dart';
+import 'admin_narudzbe_screen.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({super.key, required this.session});
@@ -44,13 +45,17 @@ class AdminHomeScreen extends StatelessWidget {
                 'Uloga: ${user.ulogaZaposlenika ?? 'Administrator'}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Admin panel — ovdje će biti pregled svih narudžbi.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => AdminNarudzbeScreen(session: session),
                     ),
+                  );
+                },
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text('Pregled narudžbi'),
               ),
             ],
           ),

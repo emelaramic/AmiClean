@@ -128,7 +128,7 @@ class StavkaCijenaPreview extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Procijenjena cijena',
+              'Cijena stavke',
               style: theme.textTheme.titleSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

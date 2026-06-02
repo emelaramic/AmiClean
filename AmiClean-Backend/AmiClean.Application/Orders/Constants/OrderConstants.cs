@@ -20,11 +20,13 @@ public static class NarudzbaKanali
 public static class NarudzbaStatusi
 {
     public const string Kreirana = "Kreirana";
+    public const string Primljena = "Primljena";
 }
 
 public static class StavkaStatusi
 {
     public const string Kreirana = "Kreirana";
+    public const string Primljena = "Primljena";
 }
 
 public static class LogistikaTipovi
