@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/api/api_client.dart';
+import 'core/theme/amiclean_theme.dart';
 import 'core/auth/auth_session.dart';
 import 'core/cart/cart_session.dart';
 import 'core/routing/auth_gate.dart';
@@ -32,16 +33,7 @@ class AmiCleanApp extends StatelessWidget {
     return MaterialApp(
       title: 'AmiClean',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1565C0),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        inputDecorationTheme: const InputDecorationTheme(
-          filled: true,
-        ),
-      ),
+      theme: AmiCleanTheme.light,
       home: AuthGate(
         session: _authSession,
         cart: _cartSession,
