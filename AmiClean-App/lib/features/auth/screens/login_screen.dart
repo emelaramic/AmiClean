@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
@@ -7,6 +6,9 @@ import '../../../core/theme/amiclean_colors.dart';
 import '../models/prijava_response.dart';
 import '../services/auth_service.dart';
 import '../services/korisnik_service.dart';
+import '../utils/auth_page_route.dart';
+import '../widgets/auth_brand_layout.dart';
+import '../widgets/auth_primary_button.dart';
 import '../widgets/login_underline_field.dart';
 import 'registracija_screen.dart';
 
@@ -27,8 +29,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static const _avatarSize = 88.0;
-
   final _korisnikFormKey = GlobalKey<FormState>();
   final _adminFormKey = GlobalKey<FormState>();
 
@@ -98,10 +98,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _openRegistracija() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => RegistracijaScreen(
-          korisnikService: widget.korisnikService,
-        ),
+      AuthPageRoute<void>(
+        page: RegistracijaScreen(korisnikService: widget.korisnikService),
       ),
     );
   }
@@ -120,110 +118,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: AmiCleanColors.pageBackground,
-        ),
-        child: SafeArea(
-          child: AbsorbPointer(
-            absorbing: _isSubmitting,
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.topCenter,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: _avatarSize / 2),
-                        child: _buildLoginCard(),
-                      ),
-                      _buildAvatar(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    return Container(
-      width: _avatarSize,
-      height: _avatarSize,
-      decoration: BoxDecoration(
-        color: AmiCleanColors.darkBlue,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: AmiCleanColors.darkBlue.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.person_outline,
-        color: Colors.white,
-        size: 44,
-      ),
-    );
-  }
-
-  Widget _buildLoginCard() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: AmiCleanColors.loginCard,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: AmiCleanColors.darkBlue.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          _avatarSize / 2 + 16,
-          24,
-          28,
-        ),
+    return AbsorbPointer(
+      absorbing: _isSubmitting,
+      child: AuthBrandLayout(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'AmiClean',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 2,
-                height: 1.1,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Hemijska čistionica',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                color: const Color(0xD9FFFFFF),
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.3,
-              ),
-            ),
-            const SizedBox(height: 20),
             _buildRoleTabs(),
             const SizedBox(height: 24),
             AnimatedSwitcher(
@@ -330,8 +230,9 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 12),
           _buildOptionsRow(showForgotPassword: true),
           const SizedBox(height: 24),
-          _buildLoginButton(
+          AuthPrimaryButton(
             label: 'PRIJAVA',
+            loading: _isSubmitting,
             onPressed: _prijavaKorisnika,
           ),
           const SizedBox(height: 12),
@@ -339,7 +240,11 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: _openRegistracija,
             child: const Text(
               'Nemaš račun? Registriraj se',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: Colors.white,
+                decoration: TextDecoration.underline,
+                decorationColor: Colors.white,
+              ),
             ),
           ),
         ],
@@ -395,8 +300,9 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 12),
           _buildOptionsRow(showForgotPassword: false),
           const SizedBox(height: 24),
-          _buildLoginButton(
+          AuthPrimaryButton(
             label: 'PRIJAVA',
+            loading: _isSubmitting,
             onPressed: _prijavaAdmina,
           ),
         ],
@@ -443,44 +349,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildLoginButton({
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return SizedBox(
-      height: 48,
-      child: FilledButton(
-        onPressed: _isSubmitting ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: AmiCleanColors.darkBlue,
-          disabledBackgroundColor:
-              AmiCleanColors.darkBlue.withValues(alpha: 0.6),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          elevation: 2,
-        ),
-        child: _isSubmitting
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                ),
-              ),
-      ),
     );
   }
 }

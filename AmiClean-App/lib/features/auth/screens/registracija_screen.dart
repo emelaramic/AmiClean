@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/api/api_exception.dart';
-import '../services/korisnik_service.dart';
+import '../../../core/theme/amiclean_colors.dart';
 import '../models/registracija_request.dart';
+import '../services/korisnik_service.dart';
+import '../widgets/auth_brand_layout.dart';
+import '../widgets/auth_primary_button.dart';
+import '../widgets/login_underline_field.dart';
 
 class RegistracijaScreen extends StatefulWidget {
   const RegistracijaScreen({super.key, required this.korisnikService});
@@ -63,7 +67,7 @@ class _RegistracijaScreenState extends State<RegistracijaScreen> {
       if (!mounted) return;
 
       _clearForm();
-      await _showSuccessDialog(korisnik.punoIme, korisnik.id);
+      await _showSuccessDialog(korisnik.punoIme);
     } on ApiException catch (error) {
       if (!mounted) return;
       _showErrorSnackBar(error.message);
@@ -88,19 +92,27 @@ class _RegistracijaScreenState extends State<RegistracijaScreen> {
     _potvrdaLozinkeController.clear();
   }
 
-  Future<void> _showSuccessDialog(String punoIme, int id) {
+  Future<void> _showSuccessDialog(String punoIme) {
     return showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-        title: const Text('Registracija uspješna'),
-        content: Text(
-          'Korisnik $punoIme je spremljen u bazu.\nID: $id',
+        icon: Icon(
+          Icons.check_circle_outline,
+          color: AmiCleanColors.mediumBlue,
+          size: 48,
         ),
+        title: const Text('Registracija uspješna'),
+        content: Text('Račun za $punoIme je kreiran. Možete se prijaviti.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('U redu'),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AmiCleanColors.darkBlue,
+            ),
+            child: const Text('Na prijavu'),
           ),
         ],
       ),
@@ -113,219 +125,164 @@ class _RegistracijaScreenState extends State<RegistracijaScreen> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          backgroundColor: AmiCleanColors.darkBlue,
         ),
       );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AmiClean — Registracija'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: AbsorbPointer(
-          absorbing: _isSubmitting,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Kreiraj korisnički račun',
-                    style: theme.textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Podaci se šalju na backend i spremaju u SQL bazu.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _sectionTitle(theme, 'Osnovni podaci'),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _imeController,
-                          textInputAction: TextInputAction.next,
-                          textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            labelText: 'Ime *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Ime je obavezno';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _prezimeController,
-                          textInputAction: TextInputAction.next,
-                          textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            labelText: 'Prezime *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Prezime je obavezno';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      final email = value?.trim() ?? '';
-                      if (email.isEmpty) return null;
-                      final emailPattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                      if (!emailPattern.hasMatch(email)) {
-                        return 'Unesi ispravan email';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  _sectionTitle(theme, 'Kontakt'),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _telefonController,
-                    keyboardType: TextInputType.phone,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Broj telefona',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _adresaController,
-                    textInputAction: TextInputAction.next,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Adresa stanovanja',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _sectionTitle(theme, 'Sigurnost'),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _lozinkaController,
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: 'Lozinka *',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Lozinka je obavezna';
-                      }
-                      if (value.length < 6) {
-                        return 'Lozinka mora imati najmanje 6 znakova';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _potvrdaLozinkeController,
-                    obscureText: _obscureConfirmPassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      labelText: 'Potvrda lozinke *',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        onPressed: () => setState(
-                          () => _obscureConfirmPassword =
-                              !_obscureConfirmPassword,
-                        ),
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Potvrdi lozinku';
-                      }
-                      if (value != _lozinkaController.text) {
-                        return 'Lozinke se ne podudaraju';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                  FilledButton.icon(
-                    onPressed: _isSubmitting ? null : _submit,
-                    icon: _isSubmitting
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: theme.colorScheme.onPrimary,
-                            ),
-                          )
-                        : const Icon(Icons.person_add_outlined),
-                    label: Text(
-                      _isSubmitting ? 'Spremanje...' : 'Registriraj se',
-                    ),
-                  ),
-                ],
+    return AbsorbPointer(
+      absorbing: _isSubmitting,
+      child: AuthBrandLayout(
+        avatarIcon: Icons.person_add_outlined,
+        subtitle: 'Registracija',
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back),
+          color: AmiCleanColors.darkBlue,
+          tooltip: 'Natrag na prijavu',
+        ),
+        child: Form(
+          key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              LoginUnderlineField(
+                controller: _imeController,
+                label: 'Ime *',
+                icon: Icons.person_outline,
+                textInputAction: TextInputAction.next,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Ime je obavezno';
+                  }
+                  return null;
+                },
               ),
-            ),
+              const SizedBox(height: 14),
+              LoginUnderlineField(
+                controller: _prezimeController,
+                label: 'Prezime *',
+                icon: Icons.person_outline,
+                textInputAction: TextInputAction.next,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Prezime je obavezno';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 14),
+              LoginUnderlineField(
+                controller: _emailController,
+                label: 'Email',
+                icon: Icons.mail_outline,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                validator: (value) {
+                  final email = value?.trim() ?? '';
+                  if (email.isEmpty) return null;
+                  final emailPattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                  if (!emailPattern.hasMatch(email)) {
+                    return 'Unesi ispravan email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 14),
+              LoginUnderlineField(
+                controller: _telefonController,
+                label: 'Broj telefona',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 14),
+              LoginUnderlineField(
+                controller: _adresaController,
+                label: 'Adresa stanovanja',
+                icon: Icons.home_outlined,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 14),
+              LoginUnderlineField(
+                controller: _lozinkaController,
+                label: 'Lozinka *',
+                icon: Icons.lock_outline,
+                obscureText: _obscurePassword,
+                textInputAction: TextInputAction.next,
+                suffix: IconButton(
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: Colors.white,
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Lozinka je obavezna';
+                  }
+                  if (value.length < 6) {
+                    return 'Najmanje 6 znakova';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 14),
+              LoginUnderlineField(
+                controller: _potvrdaLozinkeController,
+                label: 'Potvrda lozinke *',
+                icon: Icons.lock_outline,
+                obscureText: _obscureConfirmPassword,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _submit(),
+                suffix: IconButton(
+                  onPressed: () => setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                  ),
+                  icon: Icon(
+                    _obscureConfirmPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: Colors.white,
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Potvrdi lozinku';
+                  }
+                  if (value != _lozinkaController.text) {
+                    return 'Lozinke se ne podudaraju';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              AuthPrimaryButton(
+                label: 'REGISTRUJ SE',
+                loading: _isSubmitting,
+                onPressed: _submit,
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Već imaš račun? Prijavi se',
+                  style: TextStyle(
+                    color: Colors.white,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _sectionTitle(ThemeData theme, String title) {
-    return Text(
-      title,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w600,
       ),
     );
   }
