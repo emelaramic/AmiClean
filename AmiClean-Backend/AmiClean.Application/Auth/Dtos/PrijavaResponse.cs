@@ -9,4 +9,6 @@ public class PrijavaResponse
     public string? Email { get; set; }
     public string? Korisnicko_Ime { get; set; }
     public string? Uloga_Zaposlenika { get; set; }
+    public string? Broj_Telefona { get; set; }
+    public string? Adresa_Stanovanja { get; set; }
 }

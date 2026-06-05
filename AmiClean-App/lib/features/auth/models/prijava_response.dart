@@ -19,6 +19,8 @@ class PrijavaResponse {
     this.email,
     this.korisnickoIme,
     this.ulogaZaposlenika,
+    this.brojTelefona,
+    this.adresaStanovanja,
   });
 
   final int id;
@@ -28,6 +30,8 @@ class PrijavaResponse {
   final String? email;
   final String? korisnickoIme;
   final String? ulogaZaposlenika;
+  final String? brojTelefona;
+  final String? adresaStanovanja;
 
   factory PrijavaResponse.fromJson(Map<String, dynamic> json) {
     return PrijavaResponse(
@@ -36,8 +40,14 @@ class PrijavaResponse {
       prezime: json['prezime'] as String,
       uloga: UserRole.fromApiValue(json['uloga'] as String),
       email: json['email'] as String?,
-      korisnickoIme: json['korisnicko_Ime'] as String?,
-      ulogaZaposlenika: json['uloga_Zaposlenika'] as String?,
+      korisnickoIme:
+          json['korisnickoIme'] as String? ?? json['korisnicko_Ime'] as String?,
+      ulogaZaposlenika:
+          json['ulogaZaposlenika'] as String? ?? json['uloga_Zaposlenika'] as String?,
+      brojTelefona:
+          json['brojTelefona'] as String? ?? json['broj_Telefona'] as String?,
+      adresaStanovanja: json['adresaStanovanja'] as String? ??
+          json['adresa_Stanovanja'] as String?,
     );
   }
 

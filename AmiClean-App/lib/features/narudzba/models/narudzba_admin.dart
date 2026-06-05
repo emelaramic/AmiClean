@@ -54,6 +54,7 @@ class NarudzbaAdminDetalj {
     required this.korisnikPunoIme,
     this.korisnikEmail,
     this.korisnikTelefon,
+    this.korisnikAdresaStanovanja,
     required this.mozeSePrimijeti,
   });
 
@@ -71,6 +72,7 @@ class NarudzbaAdminDetalj {
   final String korisnikPunoIme;
   final String? korisnikEmail;
   final String? korisnikTelefon;
+  final String? korisnikAdresaStanovanja;
   final bool mozeSePrimijeti;
 
   factory NarudzbaAdminDetalj.fromJson(Map<String, dynamic> json) {
@@ -94,6 +96,7 @@ class NarudzbaAdminDetalj {
       korisnikPunoIme: json['korisnikPunoIme'] as String,
       korisnikEmail: json['korisnikEmail'] as String?,
       korisnikTelefon: json['korisnikTelefon'] as String?,
+      korisnikAdresaStanovanja: json['korisnikAdresaStanovanja'] as String?,
       mozeSePrimijeti: json['mozeSePrimijeti'] as bool,
     );
   }

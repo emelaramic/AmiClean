@@ -4,6 +4,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../katalog/utils/cijena_display.dart';
+import '../../narudzba/models/nacin_predaje.dart';
 import '../../narudzba/models/narudzba_admin.dart';
 import '../../narudzba/models/narudzba_pregled.dart';
 import '../../narudzba/services/narudzba_service.dart';
@@ -181,6 +182,10 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
         if (n.korisnikTelefon != null)
           _InfoSekcija(naslov: 'Telefon', vrijednost: n.korisnikTelefon!),
         _InfoSekcija(
+          naslov: 'Adresa s profila',
+          vrijednost: _formatAdresaProfila(n.korisnikAdresaStanovanja),
+        ),
+        _InfoSekcija(
           naslov: 'Datum',
           vrijednost: _formatDatum(n.datumKreiranja),
         ),
@@ -188,8 +193,18 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
           naslov: 'Način predaje',
           vrijednost: n.nacinPredajeNaziv,
         ),
-        if (n.adresaPreuzimanja != null)
-          _InfoSekcija(naslov: 'Adresa', vrijednost: n.adresaPreuzimanja!),
+        if (n.nacinPredaje == NacinPredaje.preuzimanjeIDostava.apiVrijednost)
+          _InfoSekcija(
+            naslov: 'Adresa preuzimanja (ova narudžba)',
+            vrijednost: n.adresaPreuzimanja?.trim().isNotEmpty == true
+                ? n.adresaPreuzimanja!.trim()
+                : 'Nije unesena',
+          )
+        else
+          const _InfoSekcija(
+            naslov: 'Preuzimanje',
+            vrijednost: 'Donos u čistionicu',
+          ),
         if (n.rokZavrsetka != null)
           _InfoSekcija(
             naslov: 'Rok završetka',
@@ -289,6 +304,14 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
         ),
       ),
     );
+  }
+
+  String _formatAdresaProfila(String? adresa) {
+    final trimmed = adresa?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return 'Nije unesena pri registraciji';
+    }
+    return trimmed;
   }
 
   String _formatDatum(DateTime dt) {

@@ -22,6 +22,8 @@ class ApiConfig {
 
   static String get postKorisnikUri => '$baseUrl/api/Korisnik/PostKorisnik';
   static String get getKorisniciUri => '$baseUrl/api/Korisnik/GetKorisnici';
+  static String getProfilUri(int korisnikId) =>
+      '$baseUrl/api/Korisnik/GetProfil?korisnikId=$korisnikId';
   static String get prijavaKorisnikUri => '$baseUrl/api/Korisnik/Prijava';
   static String get prijavaZaposlenikUri => '$baseUrl/api/Zaposlenik/Prijava';
   static String get getKategorijeUri => '$baseUrl/api/Catalog/GetKategorije';

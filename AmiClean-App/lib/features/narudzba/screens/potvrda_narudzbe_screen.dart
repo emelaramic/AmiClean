@@ -4,6 +4,7 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/cart/cart_session.dart';
+import '../../auth/services/korisnik_service.dart';
 import '../models/nacin_predaje.dart';
 import '../services/narudzba_service.dart';
 
@@ -24,11 +25,20 @@ class PotvrdaNarudzbeScreen extends StatefulWidget {
 class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
   final _apiClient = ApiClient();
   late final _narudzbaService = NarudzbaService(apiClient: _apiClient);
+  late final _korisnikService = KorisnikService(apiClient: _apiClient);
   final _adresaController = TextEditingController();
   final _napomenaController = TextEditingController();
 
   NacinPredaje _nacinPredaje = NacinPredaje.donosUCistionicu;
   bool _salje = false;
+  bool _ucitavanjeProfila = true;
+  String? _profilAdresa;
+
+  @override
+  void initState() {
+    super.initState();
+    _ucitajProfilAdresu();
+  }
 
   @override
   void dispose() {
@@ -36,6 +46,56 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
     _napomenaController.dispose();
     _apiClient.dispose();
     super.dispose();
+  }
+
+  Future<void> _ucitajProfilAdresu() async {
+    final izSesije = widget.session.user?.adresaStanovanja?.trim();
+    if (izSesije != null && izSesije.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _profilAdresa = izSesije;
+          _ucitavanjeProfila = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final profil =
+          await _korisnikService.getProfil(widget.session.user!.id);
+      if (!mounted) return;
+      setState(() {
+        _profilAdresa = profil.adresaStanovanja?.trim();
+        _ucitavanjeProfila = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _ucitavanjeProfila = false);
+    }
+  }
+
+  void _onNacinPredajePromijenjen(NacinPredaje value) {
+    setState(() {
+      _nacinPredaje = value;
+      if (value == NacinPredaje.preuzimanjeIDostava) {
+        _predpopuniAdresu();
+      }
+    });
+  }
+
+  void _predpopuniAdresu() {
+    if (_adresaController.text.trim().isNotEmpty) return;
+
+    final adresa = _profilAdresa;
+    if (adresa != null && adresa.isNotEmpty) {
+      _adresaController.text = adresa;
+    }
+  }
+
+  bool get _adresaJePredpopunjena {
+    final profil = _profilAdresa;
+    if (profil == null || profil.isEmpty) return false;
+    return _adresaController.text.trim() == profil;
   }
 
   Future<void> _potvrdiNarudzbu() async {
@@ -129,7 +189,7 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
             groupValue: _nacinPredaje,
             onChanged: (value) {
               if (_salje || value == null) return;
-              setState(() => _nacinPredaje = value);
+              _onNacinPredajePromijenjen(value);
             },
             child: Column(
               children: NacinPredaje.values
@@ -144,14 +204,25 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
           ),
           if (_nacinPredaje == NacinPredaje.preuzimanjeIDostava) ...[
             const SizedBox(height: 16),
+            if (_ucitavanjeProfila)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: LinearProgressIndicator(),
+              ),
             TextFormField(
               controller: _adresaController,
-              decoration: const InputDecoration(
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
                 labelText: 'Adresa preuzimanja i dostave',
-                border: OutlineInputBorder(),
+                helperText: _adresaJePredpopunjena
+                    ? 'Adresa s vašeg profila. Možete je izmijeniti za ovu narudžbu.'
+                    : _profilAdresa == null || _profilAdresa!.isEmpty
+                        ? 'Nemate adresu u profilu — unesite adresu za ovu narudžbu.'
+                        : null,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
-              enabled: !_salje,
+              enabled: !_salje && !_ucitavanjeProfila,
             ),
           ],
           const SizedBox(height: 16),

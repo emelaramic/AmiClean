@@ -62,6 +62,30 @@ public class KorisnikController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet]
+    public async Task<ActionResult<KorisnikProfilDto>> GetProfil([FromQuery] int korisnikId)
+    {
+        if (korisnikId <= 0)
+            return BadRequest(new { message = "KorisnikId nije ispravan." });
+
+        var korisnik = await _context.Korisnici
+            .AsNoTracking()
+            .FirstOrDefaultAsync(k => k.ID_Korisnika == korisnikId && k.Aktivan);
+
+        if (korisnik is null)
+            return NotFound(new { message = "Korisnik nije pronađen." });
+
+        return Ok(new KorisnikProfilDto
+        {
+            Id = korisnik.ID_Korisnika,
+            Ime = korisnik.Ime,
+            Prezime = korisnik.Prezime,
+            Email = korisnik.Email,
+            BrojTelefona = korisnik.Broj_Telefona,
+            AdresaStanovanja = korisnik.Adresa_Stanovanja,
+        });
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> PutKorisnik(int id, Korisnik korisnik)
     {

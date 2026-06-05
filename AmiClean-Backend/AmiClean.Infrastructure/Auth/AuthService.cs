@@ -42,6 +42,8 @@ public class AuthService : IAuthService
             Prezime = korisnik.Prezime,
             Uloga = AuthUloge.Korisnik,
             Email = korisnik.Email,
+            Broj_Telefona = korisnik.Broj_Telefona,
+            Adresa_Stanovanja = korisnik.Adresa_Stanovanja,
         };
     }
 

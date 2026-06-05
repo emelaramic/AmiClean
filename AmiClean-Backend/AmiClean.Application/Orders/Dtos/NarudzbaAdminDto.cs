@@ -19,6 +19,7 @@ public class NarudzbaAdminDetaljDto : NarudzbaDetaljDto
     public string KorisnikPunoIme { get; set; } = null!;
     public string? KorisnikEmail { get; set; }
     public string? KorisnikTelefon { get; set; }
+    public string? KorisnikAdresaStanovanja { get; set; }
     public bool MozeSePrimijeti { get; set; }
 }
 

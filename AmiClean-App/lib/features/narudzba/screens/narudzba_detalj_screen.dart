@@ -125,7 +125,7 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
         ),
         if (n.adresaPreuzimanja != null)
           _InfoSekcija(
-            naslov: 'Adresa',
+            naslov: 'Adresa preuzimanja (ova narudžba)',
             vrijednost: n.adresaPreuzimanja!,
           ),
         if (n.rokZavrsetka != null)

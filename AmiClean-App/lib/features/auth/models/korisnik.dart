@@ -19,12 +19,17 @@ class Korisnik {
 
   factory Korisnik.fromJson(Map<String, dynamic> json) {
     return Korisnik(
-      id: json['id_Korisnika'] as int? ?? json['iD_Korisnika'] as int? ?? 0,
+      id: json['id'] as int? ??
+          json['id_Korisnika'] as int? ??
+          json['iD_Korisnika'] as int? ??
+          0,
       ime: json['ime'] as String,
       prezime: json['prezime'] as String,
       email: json['email'] as String?,
-      brojTelefona: json['broj_Telefona'] as String?,
-      adresaStanovanja: json['adresa_Stanovanja'] as String?,
+      brojTelefona:
+          json['brojTelefona'] as String? ?? json['broj_Telefona'] as String?,
+      adresaStanovanja: json['adresaStanovanja'] as String? ??
+          json['adresa_Stanovanja'] as String?,
       aktivan: json['aktivan'] as bool? ?? true,
     );
   }

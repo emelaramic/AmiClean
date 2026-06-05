@@ -16,4 +16,9 @@ class KorisnikService {
 
     return Korisnik.fromJson(payload);
   }
+
+  Future<Korisnik> getProfil(int korisnikId) async {
+    final payload = await _apiClient.get(ApiConfig.getProfilUri(korisnikId));
+    return Korisnik.fromJson(payload);
+  }
 }

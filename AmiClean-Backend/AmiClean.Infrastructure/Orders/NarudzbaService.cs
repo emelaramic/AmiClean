@@ -330,6 +330,7 @@ public class NarudzbaService : INarudzbaService
             KorisnikPunoIme = $"{narudzba.Korisnik.Ime} {narudzba.Korisnik.Prezime}",
             KorisnikEmail = narudzba.Korisnik.Email,
             KorisnikTelefon = narudzba.Korisnik.Broj_Telefona,
+            KorisnikAdresaStanovanja = narudzba.Korisnik.Adresa_Stanovanja,
             MozeSePrimijeti = narudzba.Status.Naziv == NarudzbaStatusi.Kreirana,
         };
     }
