@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.6.0
   crypto: ^3.0.7
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -58,11 +59,3 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
-  fonts:
-    - family: Calma
-      fonts:
-        - asset: assets/fonts/Calma-Regular.otf
-          weight: 400
-        - asset: assets/fonts/Calma-Regular.otf
-          weight: 600
