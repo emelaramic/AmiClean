@@ -41,6 +41,7 @@ public static class NarudzbaAdminAkcije
 {
     public const string Primijeni = "Primijeni";
     public const string PromijeniStatus = "PromijeniStatus";
+    public const string Otkazi = "Otkazi";
 }
 
 public static class NarudzbaStatusPrijelazi
@@ -66,6 +67,9 @@ public static class NarudzbaStatusPrijelazi
     public static bool JeDozvoljenPrijelaz(string trenutniStatus, string noviStatus) =>
         GetSljedeci(trenutniStatus) == noviStatus;
 
+    public static bool MozeSeOtkazati(string trenutniStatus) =>
+        trenutniStatus == NarudzbaStatusi.Kreirana;
+
     public static string? GetStavkaStatusZaNarudzbu(string statusNarudzbe) =>
         StavkaZaNarudzbu.TryGetValue(statusNarudzbe, out var status) ? status : null;
 
@@ -75,6 +79,7 @@ public static class NarudzbaStatusPrijelazi
         NarudzbaStatusi.UObradi => "Narudžba je označena kao u obradi.",
         NarudzbaStatusi.Gotova => "Narudžba je gotova za preuzimanje ili dostavu.",
         NarudzbaStatusi.Preuzeta => "Narudžba je označena kao preuzeta.",
+        NarudzbaStatusi.Otkazana => "Narudžba je otkazana.",
         _ => $"Status narudžbe je promijenjen u '{noviStatus}'.",
     };
 
@@ -95,6 +100,7 @@ public static class LogistikaTipovi
 public static class LogistikaStatusi
 {
     public const string Zakazano = "Zakazano";
+    public const string Otkazano = "Otkazano";
 }
 
 public static class NacinZavrsetkaVrijednosti

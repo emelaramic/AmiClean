@@ -32,4 +32,8 @@ public interface INarudzbaService
     Task<NarudzbaStatusPromjenaDto> PromijeniStatusNarudzbeAsync(
         PromijeniStatusNarudzbeRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<NarudzbaStatusPromjenaDto> OtkaziNarudzbuAsync(
+        OtkaziNarudzbuRequest request,
+        CancellationToken cancellationToken = default);
 }

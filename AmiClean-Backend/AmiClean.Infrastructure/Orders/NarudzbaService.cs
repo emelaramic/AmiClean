@@ -471,6 +471,91 @@ public class NarudzbaService : INarudzbaService
         };
     }
 
+    public async Task<NarudzbaStatusPromjenaDto> OtkaziNarudzbuAsync(
+        OtkaziNarudzbuRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.NarudzbaId <= 0)
+            throw new NarudzbaValidationException("NarudzbaId nije ispravan.");
+
+        var korisnikId = request.KorisnikId;
+        var zaposlenikId = request.ZaposlenikId;
+        var korisnikOtkazuje = korisnikId is > 0;
+        var adminOtkazuje = zaposlenikId is > 0;
+
+        if (korisnikOtkazuje == adminOtkazuje)
+        {
+            throw new NarudzbaValidationException(
+                "Navedite ili korisnika ili zaposlenika koji otkazuje narudžbu.");
+        }
+
+        if (korisnikOtkazuje)
+        {
+            var postoji = await _context.Korisnici
+                .AsNoTracking()
+                .AnyAsync(k => k.ID_Korisnika == korisnikId && k.Aktivan, cancellationToken);
+
+            if (!postoji)
+                throw new NarudzbaValidationException("Korisnik nije pronađen.");
+        }
+        else
+        {
+            var postoji = await _context.Zaposlenici
+                .AsNoTracking()
+                .AnyAsync(z => z.ID_Zaposlenika == zaposlenikId && z.Aktivan, cancellationToken);
+
+            if (!postoji)
+                throw new NarudzbaValidationException("Zaposlenik nije pronađen.");
+        }
+
+        var narudzba = await _context.Narudzbe
+            .Include(n => n.Status)
+            .Include(n => n.Logistike)
+            .FirstOrDefaultAsync(n => n.ID_Narudzbe == request.NarudzbaId, cancellationToken)
+            ?? throw new NarudzbaValidationException("Narudžba nije pronađena.");
+
+        if (!NarudzbaStatusPrijelazi.MozeSeOtkazati(narudzba.Status.Naziv))
+        {
+            throw new NarudzbaValidationException(
+                $"Narudžba se može otkazati samo dok je u statusu '{NarudzbaStatusi.Kreirana}'.");
+        }
+
+        if (korisnikOtkazuje && narudzba.FK_Korisnik != korisnikId)
+        {
+            throw new NarudzbaValidationException("Narudžba ne pripada ovom korisniku.");
+        }
+
+        var statusOtkazana = await _context.StatusiNarudzbe
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Naziv == NarudzbaStatusi.Otkazana, cancellationToken)
+            ?? throw new NarudzbaValidationException(
+                $"Status narudžbe '{NarudzbaStatusi.Otkazana}' nije definisan u bazi.");
+
+        narudzba.FK_Status = statusOtkazana.ID_Statusa;
+
+        if (narudzba.Logistike.Count > 0)
+        {
+            var statusLogistikeOtkazano = await _context.StatusiLogistike
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Naziv == LogistikaStatusi.Otkazano, cancellationToken)
+                ?? throw new NarudzbaValidationException(
+                    $"Status logistike '{LogistikaStatusi.Otkazano}' nije definisan u bazi.");
+
+            foreach (var logistika in narudzba.Logistike)
+                logistika.FK_Status = statusLogistikeOtkazano.ID_Statusa;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return new NarudzbaStatusPromjenaDto
+        {
+            Id = narudzba.ID_Narudzbe,
+            StatusNaziv = NarudzbaStatusi.Otkazana,
+            RokZavrsetka = narudzba.Rok_Zavrsetka,
+            Poruka = NarudzbaStatusPrijelazi.GetPorukaPromjene(NarudzbaStatusi.Otkazana),
+        };
+    }
+
     private static IReadOnlyList<NarudzbaAdminAkcijaDto> IzgradiDozvoljeneAkcije(string statusNaziv)
     {
         if (statusNaziv == NarudzbaStatusi.Kreirana)
@@ -482,6 +567,12 @@ public class NarudzbaService : INarudzbaService
                     Tip = NarudzbaAdminAkcije.Primijeni,
                     Label = "Primijeni narudžbu",
                     ZahtijevaRokZavrsetka = true,
+                },
+                new NarudzbaAdminAkcijaDto
+                {
+                    Tip = NarudzbaAdminAkcije.Otkazi,
+                    Label = "Otkaži narudžbu",
+                    SljedeciStatusNaziv = NarudzbaStatusi.Otkazana,
                 },
             ];
         }
@@ -532,6 +623,7 @@ public class NarudzbaService : INarudzbaService
             Napomena = narudzba.Napomena,
             AdresaPreuzimanja = adresa,
             RokZavrsetka = narudzba.Rok_Zavrsetka,
+            MozeSeOtkazati = NarudzbaStatusPrijelazi.MozeSeOtkazati(narudzba.Status.Naziv),
             Stavke = narudzba.Stavke
                 .OrderBy(s => s.ID_Stavke)
                 .Select(s => new StavkaPregledDto

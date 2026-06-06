@@ -42,6 +42,7 @@ class NarudzbaDetalj {
     this.adresaPreuzimanja,
     this.rokZavrsetka,
     required this.stavke,
+    required this.mozeSeOtkazati,
   });
 
   final int id;
@@ -54,6 +55,7 @@ class NarudzbaDetalj {
   final String? adresaPreuzimanja;
   final DateTime? rokZavrsetka;
   final List<StavkaPregled> stavke;
+  final bool mozeSeOtkazati;
 
   factory NarudzbaDetalj.fromJson(Map<String, dynamic> json) {
     final stavkeJson = json['stavke'] as List<dynamic>? ?? [];
@@ -72,6 +74,7 @@ class NarudzbaDetalj {
       stavke: stavkeJson
           .map((e) => StavkaPregled.fromJson(e as Map<String, dynamic>))
           .toList(),
+      mozeSeOtkazati: json['mozeSeOtkazati'] as bool? ?? false,
     );
   }
 }

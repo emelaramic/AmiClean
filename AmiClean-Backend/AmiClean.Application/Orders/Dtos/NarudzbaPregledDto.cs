@@ -23,6 +23,7 @@ public class NarudzbaDetaljDto
     public string? AdresaPreuzimanja { get; set; }
     public DateTime? RokZavrsetka { get; set; }
     public IReadOnlyList<StavkaPregledDto> Stavke { get; set; } = [];
+    public bool MozeSeOtkazati { get; set; }
 }
 
 public class StavkaPregledDto

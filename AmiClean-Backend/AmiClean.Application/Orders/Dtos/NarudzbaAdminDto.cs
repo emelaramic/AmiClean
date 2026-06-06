@@ -46,6 +46,13 @@ public class PromijeniStatusNarudzbeRequest
     public string NoviStatusNaziv { get; set; } = null!;
 }
 
+public class OtkaziNarudzbuRequest
+{
+    public int NarudzbaId { get; set; }
+    public int? KorisnikId { get; set; }
+    public int? ZaposlenikId { get; set; }
+}
+
 public class NarudzbaStatusPromjenaDto
 {
     public int Id { get; set; }

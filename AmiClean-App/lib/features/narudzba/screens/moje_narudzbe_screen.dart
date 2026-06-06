@@ -67,15 +67,19 @@ class _MojeNarudzbeScreenState extends State<MojeNarudzbeScreen> {
     }
   }
 
-  void _otvoriDetalj(NarudzbaPregled narudzba) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
+  Future<void> _otvoriDetalj(NarudzbaPregled narudzba) async {
+    final osvjezeno = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => NarudzbaDetaljScreen(
           session: widget.session,
           narudzbaId: narudzba.id,
         ),
       ),
     );
+
+    if (osvjezeno == true) {
+      await _ucitajNarudzbe();
+    }
   }
 
   @override

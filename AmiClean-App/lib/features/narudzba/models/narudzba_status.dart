@@ -7,6 +7,7 @@ class NarudzbaStatusi {
   static const uObradi = 'U obradi';
   static const gotova = 'Gotova';
   static const preuzeta = 'Preuzeta';
+  static const otkazana = 'Otkazana';
 
   static const filterOpcije = <String?, String>{
     null: 'Sve',
@@ -15,6 +16,7 @@ class NarudzbaStatusi {
     uObradi: 'U obradi',
     gotova: 'Gotove',
     preuzeta: 'Preuzete',
+    otkazana: 'Otkazane',
   };
 }
 
@@ -28,6 +30,7 @@ class NarudzbaAdminAkcija {
 
   static const tipPrimijeni = 'Primijeni';
   static const tipPromijeniStatus = 'PromijeniStatus';
+  static const tipOtkazi = 'Otkazi';
 
   final String tip;
   final String label;

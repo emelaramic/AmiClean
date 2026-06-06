@@ -59,6 +59,22 @@ class NarudzbaService {
     return NarudzbaStatusPromjena.fromJson(payload);
   }
 
+  Future<NarudzbaStatusPromjena> otkaziNarudzbu({
+    required int narudzbaId,
+    int? korisnikId,
+    int? zaposlenikId,
+  }) async {
+    final payload = await _apiClient.post(
+      ApiConfig.otkaziNarudzbuUri,
+      {
+        'narudzbaId': narudzbaId,
+        'korisnikId': ?korisnikId,
+        'zaposlenikId': ?zaposlenikId,
+      },
+    );
+    return NarudzbaStatusPromjena.fromJson(payload);
+  }
+
   Future<List<NarudzbaPregled>> getMojeNarudzbe(int korisnikId) async {
     final payload = await _apiClient.getList(
       ApiConfig.getMojeNarudzbeUri(korisnikId),

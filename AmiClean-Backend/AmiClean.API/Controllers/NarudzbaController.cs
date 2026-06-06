@@ -123,6 +123,20 @@ public class NarudzbaController : ControllerBase
         }
     }
 
+    [HttpPost]
+    public async Task<ActionResult<NarudzbaStatusPromjenaDto>> OtkaziNarudzbu(
+        OtkaziNarudzbuRequest request)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.OtkaziNarudzbuAsync(request));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Narudzba>>> GetNarudzbe()
     {

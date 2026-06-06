@@ -134,6 +134,66 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
     }
   }
 
+  Future<bool> _potvrdiOtkazivanje() async {
+    final potvrda = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Otkaži narudžbu'),
+        content: const Text(
+          'Narudžba će biti označena kao otkazana. Jeste li sigurni?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Ne'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Da, otkaži'),
+          ),
+        ],
+      ),
+    );
+    return potvrda ?? false;
+  }
+
+  Future<void> _otkaziNarudzbu() async {
+    if (!await _potvrdiOtkazivanje()) return;
+
+    setState(() {
+      _spremanje = true;
+      _greska = null;
+    });
+
+    try {
+      final rezultat = await _narudzbaService.otkaziNarudzbu(
+        narudzbaId: widget.narudzbaId,
+        zaposlenikId: widget.session.user!.id,
+      );
+      if (!mounted) return;
+
+      _promijenjeno = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(rezultat.poruka)),
+      );
+
+      await _ucitajDetalj(showLoading: false);
+      if (mounted) setState(() => _spremanje = false);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _greska = e.message;
+        _spremanje = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _greska = 'Otkazivanje narudžbe nije uspjelo.';
+        _spremanje = false;
+      });
+    }
+  }
+
   Future<void> _promijeniStatus(NarudzbaAdminAkcija akcija) async {
     final sljedeci = akcija.sljedeciStatusNaziv;
     if (sljedeci == null) return;
@@ -287,10 +347,13 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
           ),
           const SizedBox(height: 8),
           ...n.dozvoljeneAkcije.map(_buildAkcija),
-        ] else if (n.statusNaziv == NarudzbaStatusi.preuzeta) ...[
+        ] else if (n.statusNaziv == NarudzbaStatusi.preuzeta ||
+            n.statusNaziv == NarudzbaStatusi.otkazana) ...[
           const SizedBox(height: 24),
           Text(
-            'Narudžba je završena.',
+            n.statusNaziv == NarudzbaStatusi.otkazana
+                ? 'Narudžba je otkazana.'
+                : 'Narudžba je završena.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -328,7 +391,29 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
                 : const Icon(Icons.check_circle_outline),
             label: Text(akcija.label),
           ),
+          const SizedBox(height: 12),
         ],
+      );
+    }
+
+    if (akcija.tip == NarudzbaAdminAkcija.tipOtkazi) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: OutlinedButton.icon(
+          onPressed: _spremanje ? null : _otkaziNarudzbu,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+            side: BorderSide(color: Theme.of(context).colorScheme.error),
+          ),
+          icon: _spremanje
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.cancel_outlined),
+          label: Text(akcija.label),
+        ),
       );
     }
 

@@ -5,6 +5,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../katalog/utils/cijena_display.dart';
 import '../models/narudzba_pregled.dart';
+import '../models/narudzba_status.dart';
 import '../services/narudzba_service.dart';
 
 class NarudzbaDetaljScreen extends StatefulWidget {
@@ -27,6 +28,8 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
 
   NarudzbaDetalj? _narudzba;
   bool _loading = true;
+  bool _otkazivanje = false;
+  bool _promijenjeno = false;
   String? _greska;
 
   @override
@@ -41,11 +44,13 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
     super.dispose();
   }
 
-  Future<void> _ucitajDetalj() async {
-    setState(() {
-      _loading = true;
-      _greska = null;
-    });
+  Future<void> _ucitajDetalj({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _greska = null;
+      });
+    }
 
     try {
       final detalj = await _narudzbaService.getDetaljNarudzbe(
@@ -72,11 +77,77 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
     }
   }
 
+  Future<bool> _potvrdiOtkazivanje() async {
+    final potvrda = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Otkaži narudžbu'),
+        content: const Text(
+          'Narudžba se može otkazati samo dok nije primljena u čistionici. '
+          'Jeste li sigurni?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Ne'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Da, otkaži'),
+          ),
+        ],
+      ),
+    );
+    return potvrda ?? false;
+  }
+
+  Future<void> _otkaziNarudzbu() async {
+    if (!await _potvrdiOtkazivanje()) return;
+
+    setState(() {
+      _otkazivanje = true;
+      _greska = null;
+    });
+
+    try {
+      final rezultat = await _narudzbaService.otkaziNarudzbu(
+        narudzbaId: widget.narudzbaId,
+        korisnikId: widget.session.user!.id,
+      );
+      if (!mounted) return;
+
+      _promijenjeno = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(rezultat.poruka)),
+      );
+
+      await _ucitajDetalj(showLoading: false);
+      if (mounted) setState(() => _otkazivanje = false);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _greska = e.message;
+        _otkazivanje = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _greska = 'Otkazivanje narudžbe nije uspjelo.';
+        _otkazivanje = false;
+      });
+    }
+  }
+
+  void _zatvori() {
+    Navigator.of(context).pop(_promijenjeno);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Narudžba #${widget.narudzbaId}'),
+        leading: BackButton(onPressed: _zatvori),
       ),
       body: _buildBody(),
     );
@@ -161,6 +232,32 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
             ),
           ],
         ),
+        if (n.mozeSeOtkazati) ...[
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: _otkazivanje ? null : _otkaziNarudzbu,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+              side: BorderSide(color: Theme.of(context).colorScheme.error),
+            ),
+            icon: _otkazivanje
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cancel_outlined),
+            label: const Text('Otkaži narudžbu'),
+          ),
+        ] else if (n.statusNaziv == NarudzbaStatusi.otkazana) ...[
+          const SizedBox(height: 24),
+          Text(
+            'Ova narudžba je otkazana.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+        ],
       ],
     );
   }
