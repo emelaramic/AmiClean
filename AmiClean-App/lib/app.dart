@@ -5,12 +5,14 @@ import 'core/theme/amiclean_theme.dart';
 import 'core/auth/auth_session.dart';
 import 'core/cart/cart_session.dart';
 import 'core/routing/auth_gate.dart';
+import 'core/widgets/native_splash_gate.dart';
 import 'features/auth/services/auth_service.dart';
 import 'features/auth/services/korisnik_service.dart';
 
 class AmiCleanApp extends StatelessWidget {
   AmiCleanApp({
     super.key,
+    required this.startedAt,
     ApiClient? apiClient,
     AuthSession? authSession,
     CartSession? cartSession,
@@ -23,6 +25,7 @@ class AmiCleanApp extends StatelessWidget {
         _korisnikService = korisnikService ??
             KorisnikService(apiClient: apiClient ?? ApiClient());
 
+  final DateTime startedAt;
   final AuthSession _authSession;
   final CartSession _cartSession;
   final AuthService _authService;
@@ -34,11 +37,14 @@ class AmiCleanApp extends StatelessWidget {
       title: 'AmiClean',
       debugShowCheckedModeBanner: false,
       theme: AmiCleanTheme.light,
-      home: AuthGate(
-        session: _authSession,
-        cart: _cartSession,
-        authService: _authService,
-        korisnikService: _korisnikService,
+      home: NativeSplashGate(
+        startedAt: startedAt,
+        child: AuthGate(
+          session: _authSession,
+          cart: _cartSession,
+          authService: _authService,
+          korisnikService: _korisnikService,
+        ),
       ),
     );
   }
