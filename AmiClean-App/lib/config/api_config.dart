@@ -41,9 +41,19 @@ class ApiConfig {
 
   static String get getSveNarudzbeUri => '$baseUrl/api/Narudzba/GetSveNarudzbe';
 
+  static String getSveNarudzbeUriFiltered(String? statusNaziv) {
+    if (statusNaziv == null || statusNaziv.isEmpty) {
+      return getSveNarudzbeUri;
+    }
+    return '$getSveNarudzbeUri?statusNaziv=${Uri.encodeComponent(statusNaziv)}';
+  }
+
   static String getDetaljNarudzbeAdminUri(int narudzbaId) =>
       '$baseUrl/api/Narudzba/GetDetaljNarudzbeAdmin?narudzbaId=$narudzbaId';
 
   static String get primijeniNarudzbuUri =>
       '$baseUrl/api/Narudzba/PrimijeniNarudzbu';
+
+  static String get promijeniStatusNarudzbeUri =>
+      '$baseUrl/api/Narudzba/PromijeniStatusNarudzbe';
 }

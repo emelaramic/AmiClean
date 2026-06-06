@@ -31,6 +31,7 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
   NarudzbaAdminDetalj? _narudzba;
   bool _loading = true;
   bool _spremanje = false;
+  bool _promijenjeno = false;
   String? _greska;
   DateTime? _rokZavrsetka;
 
@@ -46,11 +47,13 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
     super.dispose();
   }
 
-  Future<void> _ucitajDetalj() async {
-    setState(() {
-      _loading = true;
-      _greska = null;
-    });
+  Future<void> _ucitajDetalj({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _greska = null;
+      });
+    }
 
     try {
       final detalj =
@@ -109,11 +112,13 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
       );
       if (!mounted) return;
 
+      _promijenjeno = true;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(rezultat.poruka)),
       );
 
-      Navigator.of(context).pop(true);
+      await _ucitajDetalj(showLoading: false);
+      if (mounted) setState(() => _spremanje = false);
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -129,11 +134,55 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
     }
   }
 
+  Future<void> _promijeniStatus(NarudzbaAdminAkcija akcija) async {
+    final sljedeci = akcija.sljedeciStatusNaziv;
+    if (sljedeci == null) return;
+
+    setState(() {
+      _spremanje = true;
+      _greska = null;
+    });
+
+    try {
+      final rezultat = await _narudzbaService.promijeniStatusNarudzbe(
+        narudzbaId: widget.narudzbaId,
+        zaposlenikId: widget.session.user!.id,
+        noviStatusNaziv: sljedeci,
+      );
+      if (!mounted) return;
+
+      _promijenjeno = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(rezultat.poruka)),
+      );
+
+      await _ucitajDetalj(showLoading: false);
+      if (mounted) setState(() => _spremanje = false);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _greska = e.message;
+        _spremanje = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _greska = 'Neuspješna promjena statusa.';
+        _spremanje = false;
+      });
+    }
+  }
+
+  void _zatvori() {
+    Navigator.of(context).pop(_promijenjeno);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Narudžba #${widget.narudzbaId}'),
+        leading: BackButton(onPressed: _zatvori),
       ),
       body: _buildBody(),
     );
@@ -230,13 +279,32 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
             ),
           ],
         ),
-        if (n.mozeSePrimijeti) ...[
+        if (n.dozvoljeneAkcije.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text(
-            'Primanje u čistionici',
+            'Akcije',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
+          ...n.dozvoljeneAkcije.map(_buildAkcija),
+        ] else if (n.statusNaziv == NarudzbaStatusi.preuzeta) ...[
+          const SizedBox(height: 24),
+          Text(
+            'Narudžba je završena.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAkcija(NarudzbaAdminAkcija akcija) {
+    if (akcija.tip == NarudzbaAdminAkcija.tipPrimijeni) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           OutlinedButton.icon(
             onPressed: _spremanje ? null : _odaberiRokZavrsetka,
             icon: const Icon(Icons.calendar_today_outlined),
@@ -258,10 +326,25 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.check_circle_outline),
-            label: const Text('Primijeni narudžbu'),
+            label: Text(akcija.label),
           ),
         ],
-      ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: FilledButton.icon(
+        onPressed: _spremanje ? null : () => _promijeniStatus(akcija),
+        icon: _spremanje
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.arrow_forward),
+        label: Text(akcija.label),
+      ),
     );
   }
 

@@ -1,4 +1,7 @@
 import 'narudzba_pregled.dart';
+import 'narudzba_status.dart';
+
+export 'narudzba_status.dart';
 
 class NarudzbaAdminPregled {
   const NarudzbaAdminPregled({
@@ -56,6 +59,7 @@ class NarudzbaAdminDetalj {
     this.korisnikTelefon,
     this.korisnikAdresaStanovanja,
     required this.mozeSePrimijeti,
+    required this.dozvoljeneAkcije,
   });
 
   final int id;
@@ -74,6 +78,7 @@ class NarudzbaAdminDetalj {
   final String? korisnikTelefon;
   final String? korisnikAdresaStanovanja;
   final bool mozeSePrimijeti;
+  final List<NarudzbaAdminAkcija> dozvoljeneAkcije;
 
   factory NarudzbaAdminDetalj.fromJson(Map<String, dynamic> json) {
     final stavkeJson = json['stavke'] as List<dynamic>? ?? [];
@@ -98,6 +103,9 @@ class NarudzbaAdminDetalj {
       korisnikTelefon: json['korisnikTelefon'] as String?,
       korisnikAdresaStanovanja: json['korisnikAdresaStanovanja'] as String?,
       mozeSePrimijeti: json['mozeSePrimijeti'] as bool,
+      dozvoljeneAkcije: (json['dozvoljeneAkcije'] as List<dynamic>? ?? [])
+          .map((e) => NarudzbaAdminAkcija.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

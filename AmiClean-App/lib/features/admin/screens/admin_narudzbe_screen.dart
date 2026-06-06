@@ -24,6 +24,7 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
   List<NarudzbaAdminPregled> _narudzbe = [];
   bool _loading = true;
   String? _greska;
+  String? _filterStatus;
 
   @override
   void initState() {
@@ -44,7 +45,9 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
     });
 
     try {
-      final narudzbe = await _narudzbaService.getSveNarudzbe();
+      final narudzbe = await _narudzbaService.getSveNarudzbe(
+        statusNaziv: _filterStatus,
+      );
       if (!mounted) return;
       setState(() {
         _narudzbe = narudzbe;
@@ -65,7 +68,13 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
     }
   }
 
-  void _otvoriDetalj(NarudzbaAdminPregled narudzba) async {
+  void _postaviFilter(String? status) {
+    if (_filterStatus == status) return;
+    setState(() => _filterStatus = status);
+    _ucitajNarudzbe();
+  }
+
+  Future<void> _otvoriDetalj(NarudzbaAdminPregled narudzba) async {
     final osvjezeno = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => AdminNarudzbaDetaljScreen(
@@ -93,7 +102,33 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildFilterBar(),
+          Expanded(child: _buildBody()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: NarudzbaStatusi.filterOpcije.entries.map((entry) {
+          final selected = _filterStatus == entry.key;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(entry.value),
+              selected: selected,
+              onSelected: (_) => _postaviFilter(entry.key),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -122,11 +157,13 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
     }
 
     if (_narudzbe.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Text(
-            'Nema narudžbi u sistemu.',
+            _filterStatus == null
+                ? 'Nema narudžbi u sistemu.'
+                : 'Nema narudžbi sa statusom "${NarudzbaStatusi.filterOpcije[_filterStatus]}".',
             textAlign: TextAlign.center,
           ),
         ),

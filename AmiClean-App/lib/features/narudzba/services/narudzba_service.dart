@@ -11,8 +11,10 @@ class NarudzbaService {
 
   final ApiClient _apiClient;
 
-  Future<List<NarudzbaAdminPregled>> getSveNarudzbe() async {
-    final payload = await _apiClient.getList(ApiConfig.getSveNarudzbeUri);
+  Future<List<NarudzbaAdminPregled>> getSveNarudzbe({String? statusNaziv}) async {
+    final payload = await _apiClient.getList(
+      ApiConfig.getSveNarudzbeUriFiltered(statusNaziv),
+    );
     return payload
         .map((e) => NarudzbaAdminPregled.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -36,6 +38,22 @@ class NarudzbaService {
         'narudzbaId': narudzbaId,
         'zaposlenikId': zaposlenikId,
         'rokZavrsetka': rokZavrsetka.toIso8601String(),
+      },
+    );
+    return NarudzbaStatusPromjena.fromJson(payload);
+  }
+
+  Future<NarudzbaStatusPromjena> promijeniStatusNarudzbe({
+    required int narudzbaId,
+    required int zaposlenikId,
+    required String noviStatusNaziv,
+  }) async {
+    final payload = await _apiClient.post(
+      ApiConfig.promijeniStatusNarudzbeUri,
+      {
+        'narudzbaId': narudzbaId,
+        'zaposlenikId': zaposlenikId,
+        'noviStatusNaziv': noviStatusNaziv,
       },
     );
     return NarudzbaStatusPromjena.fromJson(payload);

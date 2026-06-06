@@ -21,6 +21,15 @@ public class NarudzbaAdminDetaljDto : NarudzbaDetaljDto
     public string? KorisnikTelefon { get; set; }
     public string? KorisnikAdresaStanovanja { get; set; }
     public bool MozeSePrimijeti { get; set; }
+    public IReadOnlyList<NarudzbaAdminAkcijaDto> DozvoljeneAkcije { get; set; } = [];
+}
+
+public class NarudzbaAdminAkcijaDto
+{
+    public string Tip { get; set; } = null!;
+    public string Label { get; set; } = null!;
+    public string? SljedeciStatusNaziv { get; set; }
+    public bool ZahtijevaRokZavrsetka { get; set; }
 }
 
 public class PrimijeniNarudzbuRequest
@@ -28,6 +37,13 @@ public class PrimijeniNarudzbuRequest
     public int NarudzbaId { get; set; }
     public int ZaposlenikId { get; set; }
     public DateTime RokZavrsetka { get; set; }
+}
+
+public class PromijeniStatusNarudzbeRequest
+{
+    public int NarudzbaId { get; set; }
+    public int ZaposlenikId { get; set; }
+    public string NoviStatusNaziv { get; set; } = null!;
 }
 
 public class NarudzbaStatusPromjenaDto

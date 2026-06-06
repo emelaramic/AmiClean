@@ -18,6 +18,7 @@ public interface INarudzbaService
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<NarudzbaAdminPregledDto>> GetSveNarudzbeAsync(
+        string? statusNaziv = null,
         CancellationToken cancellationToken = default);
 
     Task<NarudzbaAdminDetaljDto> GetDetaljNarudzbeAdminAsync(
@@ -26,5 +27,9 @@ public interface INarudzbaService
 
     Task<NarudzbaStatusPromjenaDto> PrimijeniNarudzbuAsync(
         PrimijeniNarudzbuRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<NarudzbaStatusPromjenaDto> PromijeniStatusNarudzbeAsync(
+        PromijeniStatusNarudzbeRequest request,
         CancellationToken cancellationToken = default);
 }
