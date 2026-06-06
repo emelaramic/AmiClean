@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 
 import '../../../core/auth/auth_session.dart';
 import '../../../core/cart/cart_session.dart';
+import '../../auth/services/korisnik_service.dart';
 import '../../katalog/screens/katalog_screen.dart';
 import '../../narudzba/screens/kosarica_screen.dart';
 import '../../narudzba/screens/moje_narudzbe_screen.dart';
 import '../../narudzba/screens/nova_narudzba_screen.dart';
+import 'moj_profil_screen.dart';
 
 class KorisnikHomeScreen extends StatelessWidget {
   const KorisnikHomeScreen({
     super.key,
     required this.session,
     required this.cart,
+    required this.korisnikService,
   });
 
   final AuthSession session;
   final CartSession cart;
+  final KorisnikService korisnikService;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +108,21 @@ class KorisnikHomeScreen extends StatelessWidget {
                     },
                     icon: const Icon(Icons.receipt_long_outlined),
                     label: const Text('Moje narudžbe'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MojProfilScreen(
+                            session: session,
+                            korisnikService: korisnikService,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.person_outline),
+                    label: const Text('Moj profil'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(

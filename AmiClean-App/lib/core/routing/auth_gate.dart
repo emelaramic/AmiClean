@@ -38,7 +38,11 @@ class AuthGate extends StatelessWidget {
 
         return switch (session.user!.uloga) {
           UserRole.admin => AdminHomeScreen(session: session),
-          UserRole.korisnik => KorisnikHomeScreen(session: session, cart: cart),
+          UserRole.korisnik => KorisnikHomeScreen(
+              session: session,
+              cart: cart,
+              korisnikService: korisnikService,
+            ),
         };
       },
     );

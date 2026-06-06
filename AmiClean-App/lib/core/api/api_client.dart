@@ -56,6 +56,29 @@ class ApiClient {
     return _decodeResponse(response);
   }
 
+  Future<Map<String, dynamic>> put(
+    String url,
+    Map<String, dynamic> body,
+  ) async {
+    http.Response response;
+
+    try {
+      response = await _httpClient
+          .put(
+            Uri.parse(url),
+            headers: _jsonHeaders,
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
+    } on TimeoutException {
+      throw const TimeoutApiException();
+    } on http.ClientException {
+      throw const NetworkApiException();
+    }
+
+    return _decodeResponse(response);
+  }
+
   Future<List<dynamic>> getList(String url) async {
     http.Response response;
 

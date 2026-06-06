@@ -86,6 +86,40 @@ public class KorisnikController : ControllerBase
         });
     }
 
+    [HttpPut]
+    public async Task<ActionResult<KorisnikProfilDto>> AzurirajProfil(AzurirajProfilRequest request)
+    {
+        if (request.KorisnikId <= 0)
+            return BadRequest(new { message = "KorisnikId nije ispravan." });
+
+        var korisnik = await _context.Korisnici
+            .FirstOrDefaultAsync(k => k.ID_Korisnika == request.KorisnikId && k.Aktivan);
+
+        if (korisnik is null)
+            return NotFound(new { message = "Korisnik nije pronađen." });
+
+        korisnik.Broj_Telefona = NormalizeOptional(request.BrojTelefona);
+        korisnik.Adresa_Stanovanja = NormalizeOptional(request.AdresaStanovanja);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new KorisnikProfilDto
+        {
+            Id = korisnik.ID_Korisnika,
+            Ime = korisnik.Ime,
+            Prezime = korisnik.Prezime,
+            Email = korisnik.Email,
+            BrojTelefona = korisnik.Broj_Telefona,
+            AdresaStanovanja = korisnik.Adresa_Stanovanja,
+        });
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        var trimmed = value?.Trim();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> PutKorisnik(int id, Korisnik korisnik)
     {

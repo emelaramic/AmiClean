@@ -52,4 +52,22 @@ class PrijavaResponse {
   }
 
   String get punoIme => '$ime $prezime';
+
+  PrijavaResponse copyWith({
+    String? email,
+    String? brojTelefona,
+    String? adresaStanovanja,
+  }) {
+    return PrijavaResponse(
+      id: id,
+      ime: ime,
+      prezime: prezime,
+      uloga: uloga,
+      email: email ?? this.email,
+      korisnickoIme: korisnickoIme,
+      ulogaZaposlenika: ulogaZaposlenika,
+      brojTelefona: brojTelefona ?? this.brojTelefona,
+      adresaStanovanja: adresaStanovanja ?? this.adresaStanovanja,
+    );
+  }
 }
