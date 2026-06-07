@@ -1,3 +1,4 @@
+using AmiClean.Application.Catalog.Dtos;
 using AmiClean.Domain.Entities;
 using AmiClean.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
@@ -17,25 +18,54 @@ public class CjenovnikController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Cjenovnik>>> GetCjenovnik()
+    public async Task<ActionResult<IEnumerable<CjenovnikStavkaDto>>> GetCjenovnik()
     {
-        return await _context.Cjenovnici
+        var stavke = await _context.Cjenovnici
             .AsNoTracking()
             .Include(c => c.Artikal)
             .Include(c => c.Usluga)
             .OrderBy(c => c.Artikal.Naziv)
             .ThenBy(c => c.Usluga.Naziv)
+            .Select(c => new CjenovnikStavkaDto
+            {
+                Id = c.ID_Cjenovnika,
+                ArtikalId = c.FK_Artikal,
+                ArtikalNaziv = c.Artikal.Naziv,
+                ArtikalKategorija = c.Artikal.Kategorija,
+                UslugaId = c.FK_Usluga,
+                UslugaNaziv = c.Usluga.Naziv,
+                Cijena = c.Cijena,
+                CijenaMax = c.Cijena_Max,
+                VaziOd = c.Vazi_Od,
+                VaziDo = c.Vazi_Do,
+            })
             .ToListAsync();
+
+        return stavke;
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Cjenovnik>> GetCjenovnikStavka(int id)
+    public async Task<ActionResult<CjenovnikStavkaDto>> GetCjenovnikStavka(int id)
     {
         var stavka = await _context.Cjenovnici
             .AsNoTracking()
             .Include(c => c.Artikal)
             .Include(c => c.Usluga)
-            .FirstOrDefaultAsync(c => c.ID_Cjenovnika == id);
+            .Where(c => c.ID_Cjenovnika == id)
+            .Select(c => new CjenovnikStavkaDto
+            {
+                Id = c.ID_Cjenovnika,
+                ArtikalId = c.FK_Artikal,
+                ArtikalNaziv = c.Artikal.Naziv,
+                ArtikalKategorija = c.Artikal.Kategorija,
+                UslugaId = c.FK_Usluga,
+                UslugaNaziv = c.Usluga.Naziv,
+                Cijena = c.Cijena,
+                CijenaMax = c.Cijena_Max,
+                VaziOd = c.Vazi_Od,
+                VaziDo = c.Vazi_Do,
+            })
+            .FirstOrDefaultAsync();
 
         if (stavka == null)
             return NotFound();
@@ -70,37 +100,20 @@ public class CjenovnikController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCjenovnik(int id, Cjenovnik cjenovnik)
+    public async Task<IActionResult> PutCjenovnik(int id, AzurirajCijenuRequest request)
     {
-        if (id != cjenovnik.ID_Cjenovnika)
-            return BadRequest();
-
-        var duplicate = await _context.Cjenovnici.AnyAsync(c =>
-            c.ID_Cjenovnika != id &&
-            c.FK_Artikal == cjenovnik.FK_Artikal &&
-            c.FK_Usluga == cjenovnik.FK_Usluga);
-
-        if (duplicate)
+        if (request.Cijena <= 0)
         {
-            return Conflict(new
-            {
-                message = "Cijena za ovu kombinaciju artikla i usluge već postoji.",
-            });
+            return BadRequest(new { message = "Cijena mora biti veća od 0." });
         }
 
-        _context.Entry(cjenovnik).State = EntityState.Modified;
+        var postojeca = await _context.Cjenovnici.FindAsync(id);
+        if (postojeca == null)
+            return NotFound();
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await _context.Cjenovnici.AnyAsync(e => e.ID_Cjenovnika == id))
-                return NotFound();
+        postojeca.Cijena = request.Cijena;
 
-            throw;
-        }
+        await _context.SaveChangesAsync();
 
         return NoContent();
     }

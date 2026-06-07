@@ -59,4 +59,9 @@ class ApiConfig {
       '$baseUrl/api/Narudzba/PromijeniStatusNarudzbe';
 
   static String get otkaziNarudzbuUri => '$baseUrl/api/Narudzba/OtkaziNarudzbu';
+
+  static String get getCjenovnikUri => '$baseUrl/api/Cjenovnik/GetCjenovnik';
+
+  static String putCjenovnikUri(int cjenovnikId) =>
+      '$baseUrl/api/Cjenovnik/PutCjenovnik/$cjenovnikId';
 }

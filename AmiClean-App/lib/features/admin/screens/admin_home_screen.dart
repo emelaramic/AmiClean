@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/auth/auth_session.dart';
+import 'admin_cjenovnik_screen.dart';
 import 'admin_narudzbe_screen.dart';
 
 class AdminHomeScreen extends StatelessWidget {
@@ -56,6 +57,18 @@ class AdminHomeScreen extends StatelessWidget {
                 },
                 icon: const Icon(Icons.receipt_long_outlined),
                 label: const Text('Pregled narudžbi'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AdminCjenovnikScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.price_change_outlined),
+                label: const Text('Cjenovnik'),
               ),
             ],
           ),
