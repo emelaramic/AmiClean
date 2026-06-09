@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/theme/amiclean_colors.dart';
 import '../../katalog/models/artikal_katalog.dart';
 import '../../katalog/services/catalog_service.dart';
 import '../../katalog/utils/ugao_artikli.dart';
@@ -9,7 +10,10 @@ import '../../katalog/widgets/artikal_odabir_panel.dart';
 import '../../katalog/widgets/tepih_dimenzije_polja.dart';
 
 class KatalogScreen extends StatefulWidget {
-  const KatalogScreen({super.key});
+  const KatalogScreen({super.key, this.embedded = false});
+
+  /// Kad je ugrađen u [KorisnikShellScreen], ne prikazuje vlastiti AppBar.
+  final bool embedded;
 
   @override
   State<KatalogScreen> createState() => _KatalogScreenState();
@@ -91,11 +95,22 @@ class _KatalogScreenState extends State<KatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final body = _buildBody();
+
+    if (widget.embedded) {
+      return DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: AmiCleanColors.pageBackground,
+        ),
+        child: body,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cjenovnik'),
       ),
-      body: _buildBody(),
+      body: body,
     );
   }
 

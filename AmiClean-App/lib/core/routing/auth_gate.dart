@@ -5,7 +5,7 @@ import '../../features/auth/models/prijava_response.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/services/auth_service.dart';
 import '../../features/auth/services/korisnik_service.dart';
-import '../../features/korisnik/screens/korisnik_home_screen.dart';
+import '../../features/korisnik/screens/korisnik_shell_screen.dart';
 import '../auth/auth_session.dart';
 import '../cart/cart_session.dart';
 
@@ -38,7 +38,7 @@ class AuthGate extends StatelessWidget {
 
         return switch (session.user!.uloga) {
           UserRole.admin => AdminHomeScreen(session: session),
-          UserRole.korisnik => KorisnikHomeScreen(
+          UserRole.korisnik => KorisnikShellScreen(
               session: session,
               cart: cart,
               korisnikService: korisnikService,
