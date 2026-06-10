@@ -66,6 +66,8 @@ flutter:
     - assets/images/app_icon.png
     - assets/images/app_icon_round.png
     - assets/images/splash_logo.png
+    - assets/images/pocetna_pozadina.png
+    - assets/images/services/
 
 flutter_launcher_icons:
   android: true

@@ -118,6 +118,8 @@ class _KorisnikShellScreenState extends State<KorisnikShellScreen> {
                       onNovaNarudzba: _openNovaNarudzba,
                       onMojeNarudzbe: _openMojeNarudzbe,
                       onProfil: _openProfil,
+                      onUsluge: () => _selectTab(2),
+                      onCjenovnik: () => _selectTab(3),
                     ),
                     const KorisnikONamaTab(),
                     KorisnikUslugeTab(onNovaNarudzba: _openNovaNarudzba),
