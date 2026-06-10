@@ -23,6 +23,8 @@ abstract final class AmiCleanTheme {
       appBarTheme: const AppBarTheme(
         backgroundColor: AmiCleanColors.darkBlue,
         foregroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
         elevation: 0,
       ),

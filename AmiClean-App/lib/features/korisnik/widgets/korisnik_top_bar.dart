@@ -36,11 +36,13 @@ class KorisnikTopBar extends StatelessWidget {
   final VoidCallback? onLogout;
 
   static const _compactBreakpoint = 720.0;
+  static const _tightNavBreakpoint = 1080.0;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < _compactBreakpoint;
+    final tightNav = !compact && width < _tightNavBreakpoint;
 
     return Material(
       color: Colors.white,
@@ -52,38 +54,44 @@ class KorisnikTopBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              _Logo(compact: compact),
+              _Logo(compact: compact || tightNav),
               if (!compact) ...[
-                const SizedBox(width: 20),
-                Expanded(child: _DesktopNav(
-                  selectedIndex: selectedIndex,
-                  onNavSelected: onNavSelected,
-                )),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DesktopNav(
+                    selectedIndex: selectedIndex,
+                    onNavSelected: onNavSelected,
+                    tight: tightNav,
+                  ),
+                ),
               ] else
                 const Spacer(),
-              _NarudzbaButton(compact: compact, onPressed: onNarudzba),
-              const SizedBox(width: 4),
-              _CartButton(count: cartCount, onPressed: onCart),
-              if (!compact &&
-                  onMojeNarudzbe != null &&
-                  onProfil != null &&
-                  onLogout != null) ...[
-                const SizedBox(width: 4),
-                _AccountMenu(
-                  onMojeNarudzbe: onMojeNarudzbe!,
-                  onProfil: onProfil!,
-                  onLogout: onLogout!,
-                ),
-              ],
-              if (compact) ...[
-                const SizedBox(width: 4),
-                IconButton(
-                  onPressed: onMenuTap,
-                  icon: const Icon(Icons.menu_rounded),
-                  tooltip: 'Meni',
-                  color: AmiCleanColors.darkBlue,
-                ),
-              ],
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _NarudzbaButton(
+                    compact: compact || tightNav,
+                    onPressed: onNarudzba,
+                  ),
+                  _CartButton(count: cartCount, onPressed: onCart),
+                  if (!compact &&
+                      onMojeNarudzbe != null &&
+                      onProfil != null &&
+                      onLogout != null)
+                    _AccountMenu(
+                      onMojeNarudzbe: onMojeNarudzbe!,
+                      onProfil: onProfil!,
+                      onLogout: onLogout!,
+                    ),
+                  if (compact)
+                    IconButton(
+                      onPressed: onMenuTap,
+                      icon: const Icon(Icons.menu_rounded),
+                      tooltip: 'Meni',
+                      color: AmiCleanColors.darkBlue,
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -130,40 +138,54 @@ class _DesktopNav extends StatelessWidget {
   const _DesktopNav({
     required this.selectedIndex,
     required this.onNavSelected,
+    required this.tight,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onNavSelected;
+  final bool tight;
 
   @override
   Widget build(BuildContext context) {
+    final buttons = List.generate(KorisnikTopBar.navLabels.length, (index) {
+      final selected = index == selectedIndex;
+      return TextButton(
+        onPressed: () => onNavSelected(index),
+        style: TextButton.styleFrom(
+          foregroundColor: selected
+              ? AmiCleanColors.darkBlue
+              : const Color(0xFF4A5568),
+          padding: EdgeInsets.symmetric(
+            horizontal: tight ? 10 : 20,
+            vertical: 10,
+          ),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(
+          KorisnikTopBar.navLabels[index],
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: tight ? 13 : 15,
+            letterSpacing: 0.2,
+            decoration: selected ? TextDecoration.underline : null,
+            decorationColor: AmiCleanColors.mediumBlue,
+            decorationThickness: 2,
+          ),
+        ),
+      );
+    });
+
+    if (tight) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(children: buttons),
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: List.generate(KorisnikTopBar.navLabels.length, (index) {
-        final selected = index == selectedIndex;
-        return TextButton(
-          onPressed: () => onNavSelected(index),
-          style: TextButton.styleFrom(
-            foregroundColor: selected
-                ? AmiCleanColors.darkBlue
-                : const Color(0xFF4A5568),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            KorisnikTopBar.navLabels[index],
-            style: TextStyle(
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: 15,
-              letterSpacing: 0.2,
-              decoration: selected ? TextDecoration.underline : null,
-              decorationColor: AmiCleanColors.mediumBlue,
-              decorationThickness: 2,
-            ),
-          ),
-        );
-      }),
+      children: buttons,
     );
   }
 }

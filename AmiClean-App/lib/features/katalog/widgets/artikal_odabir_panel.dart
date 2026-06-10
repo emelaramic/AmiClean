@@ -42,6 +42,7 @@ class ArtikalOdabirPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: odabraniIzbor == null
               ? null
               : artikalIzborNaziv(odabraniIzbor!),

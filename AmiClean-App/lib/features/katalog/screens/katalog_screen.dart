@@ -138,39 +138,46 @@ class _KatalogScreenState extends State<KatalogScreen> {
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        DropdownButtonFormField<String>(
-          initialValue: _odabranaKategorija,
-          decoration: const InputDecoration(
-            labelText: 'Kategorija',
-            border: OutlineInputBorder(),
-          ),
-          hint: const Text('Odaberite kategoriju'),
-          items: _kategorije
-              .map(
-                (k) => DropdownMenuItem(value: k, child: Text(k)),
-              )
-              .toList(),
-          onChanged: _onKategorijaChanged,
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            DropdownButtonFormField<String>(
+              isExpanded: true,
+              initialValue: _odabranaKategorija,
+              decoration: const InputDecoration(
+                labelText: 'Kategorija',
+                border: OutlineInputBorder(),
+              ),
+              hint: const Text('Odaberite kategoriju'),
+              items: _kategorije
+                  .map(
+                    (k) => DropdownMenuItem(value: k, child: Text(k)),
+                  )
+                  .toList(),
+              onChanged: _onKategorijaChanged,
+            ),
+            if (_odabranaKategorija != null) ...[
+              const SizedBox(height: 16),
+              ArtikalOdabirPanel(
+                artikliZaKategoriju: _artikliZaKategoriju,
+                sviArtikli: _artikli,
+                odabraniIzbor: _odabraniIzbor,
+                odabranaUgaoVarijanta: _odabranaUgaoVarijanta,
+                kategorija: _odabranaKategorija,
+                onIzborChanged: (ArtikalIzbor? izbor) =>
+                    setState(() => _odabraniIzbor = izbor),
+                onUgaoVarijantaChanged: (String? v) =>
+                    setState(() => _odabranaUgaoVarijanta = v),
+                uslugeBuilder: _buildUsluge,
+              ),
+            ],
+          ],
         ),
-        if (_odabranaKategorija != null) ...[
-          const SizedBox(height: 16),
-          ArtikalOdabirPanel(
-            artikliZaKategoriju: _artikliZaKategoriju,
-            sviArtikli: _artikli,
-            odabraniIzbor: _odabraniIzbor,
-            odabranaUgaoVarijanta: _odabranaUgaoVarijanta,
-            kategorija: _odabranaKategorija,
-            onIzborChanged: (ArtikalIzbor? izbor) =>
-                setState(() => _odabraniIzbor = izbor),
-            onUgaoVarijantaChanged: (String? v) =>
-                setState(() => _odabranaUgaoVarijanta = v),
-            uslugeBuilder: _buildUsluge,
-          ),
-        ],
-      ],
+      ),
     );
   }
 
