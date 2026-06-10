@@ -155,18 +155,24 @@ class _HeroContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide =
+        MediaQuery.sizeOf(context).width >= KorisnikPocetnaTab._desktopBreakpoint;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isWide ? 20 : 16,
+            vertical: isWide ? 10 : 8,
+          ),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(24),
+            color: Colors.white.withValues(alpha: 0.94),
+            borderRadius: BorderRadius.circular(999),
             boxShadow: [
               BoxShadow(
-                color: AmiCleanColors.darkBlue.withValues(alpha: 0.08),
-                blurRadius: 12,
+                color: AmiCleanColors.darkBlue.withValues(alpha: 0.1),
+                blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -176,80 +182,185 @@ class _HeroContent extends StatelessWidget {
             children: [
               Icon(
                 Icons.waving_hand_outlined,
-                size: 18,
+                size: isWide ? 20 : 18,
                 color: AmiCleanColors.slateBlue,
               ),
               const SizedBox(width: 8),
               Text(
                 'Dobrodošli, $imeKorisnika',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AmiCleanColors.darkBlue,
-                  fontSize: 14,
+                  fontSize: isWide ? 16 : 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: isWide ? 24 : 20),
         Text(
           'Mašinsko pranje tepiha, hemijsko čišćenje odjeće, pranje posteljine, '
           'te dubinsko čišćenje namještaja. Sve na jednom mjestu, s jasnim '
           'cijenama i praćenjem narudžbe.',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.black.withValues(alpha: 0.82),
-            fontSize: 15,
-            height: 1.55,
+            color: Colors.black.withValues(alpha: 0.85),
+            fontSize: isWide ? 20 : 17,
+            height: 1.6,
             fontWeight: FontWeight.w500,
+            letterSpacing: 0.15,
           ),
         ),
-        const SizedBox(height: 28),
+        SizedBox(height: isWide ? 32 : 28),
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 14,
+          runSpacing: 14,
           children: [
-            FilledButton.icon(
-              onPressed: onNovaNarudzba,
-              style: FilledButton.styleFrom(
-                backgroundColor: AmiCleanColors.darkBlue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-              ),
-              icon: const Icon(Icons.add_shopping_cart_outlined, size: 20),
-              label: const Text(
-                'Kreiraj narudžbu',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-            OutlinedButton(
+            _HeroSecondaryButton(
+              label: 'Pogledaj usluge',
+              icon: Icons.arrow_forward_rounded,
               onPressed: onUsluge,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AmiCleanColors.darkBlue,
-                side: const BorderSide(color: AmiCleanColors.slateBlue),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-              ),
-              child: const Text(
-                'Pogledaj usluge',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
+              compact: !isWide,
+            ),
+            _HeroPrimaryButton(
+              label: 'Kreiraj narudžbu',
+              icon: Icons.add_shopping_cart_outlined,
+              onPressed: onNovaNarudzba,
+              compact: !isWide,
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _HeroPrimaryButton extends StatelessWidget {
+  const _HeroPrimaryButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    required this.compact,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: AmiCleanColors.heroBackground,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AmiCleanColors.darkBlue.withValues(alpha: 0.32),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 22 : 28,
+              vertical: compact ? 15 : 17,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white, size: compact ? 20 : 22),
+                const SizedBox(width: 10),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 15 : 16,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroSecondaryButton extends StatelessWidget {
+  const _HeroSecondaryButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    required this.compact,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.8),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AmiCleanColors.darkBlue.withValues(alpha: 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 22 : 28,
+              vertical: compact ? 15 : 17,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: AmiCleanColors.darkBlue,
+                    fontWeight: FontWeight.w700,
+                    fontSize: compact ? 15 : 16,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  icon,
+                  color: AmiCleanColors.mediumBlue,
+                  size: compact ? 20 : 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

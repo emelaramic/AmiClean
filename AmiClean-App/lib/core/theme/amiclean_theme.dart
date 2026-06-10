@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'amiclean_colors.dart';
 
@@ -16,17 +17,31 @@ abstract final class AmiCleanTheme {
       onError: Colors.white,
     );
 
-    return ThemeData(
+    final base = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+    );
+
+    final textTheme = GoogleFonts.montserratTextTheme(base.textTheme).apply(
+      bodyColor: AmiCleanColors.darkBlue,
+      displayColor: AmiCleanColors.darkBlue,
+    );
+
+    return base.copyWith(
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
       scaffoldBackgroundColor: AmiCleanColors.lightBlue,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AmiCleanColors.darkBlue,
         foregroundColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.white),
-        actionsIconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
         elevation: 0,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -36,9 +51,9 @@ abstract final class AmiCleanTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4),
           ),
-          textStyle: const TextStyle(
+          textStyle: textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            letterSpacing: 1.1,
+            letterSpacing: 0.8,
           ),
         ),
       ),
