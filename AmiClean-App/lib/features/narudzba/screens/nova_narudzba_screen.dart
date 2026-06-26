@@ -19,10 +19,14 @@ class NovaNarudzbaScreen extends StatefulWidget {
     super.key,
     required this.cart,
     required this.session,
+    this.initialKategorija,
+    this.initialArtikalId,
   });
 
   final CartSession cart;
   final AuthSession session;
+  final String? initialKategorija;
+  final int? initialArtikalId;
 
   @override
   State<NovaNarudzbaScreen> createState() => _NovaNarudzbaScreenState();
@@ -97,6 +101,40 @@ class _NovaNarudzbaScreenState extends State<NovaNarudzbaScreen> {
     _sirinaController.clear();
   }
 
+  void _primijeniPocetniOdabir() {
+    final kategorija = widget.initialKategorija;
+    final artikalId = widget.initialArtikalId;
+    if (kategorija == null && artikalId == null) return;
+
+    setState(() {
+      if (kategorija != null && _kategorije.contains(kategorija)) {
+        _odabranaKategorija = kategorija;
+      }
+
+      if (artikalId != null && _odabranaKategorija != null) {
+        final artikal = _pronadjiArtikal(artikalId);
+        if (artikal == null || artikal.kategorija != _odabranaKategorija) {
+          return;
+        }
+
+        if (UgaoArtikli.jeVarijanta(artikal.naziv)) {
+          _odabraniIzbor = ArtikalIzborUgao();
+          _odabranaUgaoVarijanta = artikal.naziv;
+        } else {
+          _odabraniIzbor = ArtikalIzborObicni(artikal);
+          _odabranaUgaoVarijanta = null;
+        }
+      }
+    });
+  }
+
+  ArtikalKatalog? _pronadjiArtikal(int artikalId) {
+    for (final artikal in _artikli) {
+      if (artikal.id == artikalId) return artikal;
+    }
+    return null;
+  }
+
   Future<void> _ucitajKatalog() async {
     setState(() {
       _loading = true;
@@ -114,6 +152,7 @@ class _NovaNarudzbaScreenState extends State<NovaNarudzbaScreen> {
         _artikli = results[1] as List<ArtikalKatalog>;
         _loading = false;
       });
+      _primijeniPocetniOdabir();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {

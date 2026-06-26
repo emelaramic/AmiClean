@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '../../preporuke/widgets/preporuke_section.dart';
 import '../../../core/theme/amiclean_colors.dart';
 
 class KorisnikPocetnaTab extends StatelessWidget {
   const KorisnikPocetnaTab({
     super.key,
+    required this.korisnikId,
     required this.imeKorisnika,
     required this.onNovaNarudzba,
+    required this.onPreporukaNarudzba,
     required this.onMojeNarudzbe,
     required this.onProfil,
     required this.onUsluge,
     required this.onCjenovnik,
   });
 
+  final int korisnikId;
   final String imeKorisnika;
   final VoidCallback onNovaNarudzba;
+  final PreporukaTapCallback onPreporukaNarudzba;
   final VoidCallback onMojeNarudzbe;
   final VoidCallback onProfil;
   final VoidCallback onUsluge;
@@ -34,6 +39,10 @@ class KorisnikPocetnaTab extends StatelessWidget {
               imeKorisnika: imeKorisnika,
               onNovaNarudzba: onNovaNarudzba,
               onUsluge: onUsluge,
+            ),
+            PreporukeSection(
+              korisnikId: korisnikId,
+              onPreporukaTap: onPreporukaNarudzba,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),

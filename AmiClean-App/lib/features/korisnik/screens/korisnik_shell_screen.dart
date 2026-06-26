@@ -39,12 +39,17 @@ class _KorisnikShellScreenState extends State<KorisnikShellScreen> {
     setState(() => _selectedIndex = index);
   }
 
-  void _openNovaNarudzba() {
+  void _openNovaNarudzba({
+    String? initialKategorija,
+    int? initialArtikalId,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => NovaNarudzbaScreen(
           cart: widget.cart,
           session: widget.session,
+          initialKategorija: initialKategorija,
+          initialArtikalId: initialArtikalId,
         ),
       ),
     );
@@ -114,8 +119,17 @@ class _KorisnikShellScreenState extends State<KorisnikShellScreen> {
                   index: _selectedIndex,
                   children: [
                     KorisnikPocetnaTab(
+                      korisnikId: user.id,
                       imeKorisnika: user.punoIme,
                       onNovaNarudzba: _openNovaNarudzba,
+                      onPreporukaNarudzba: ({
+                        required kategorija,
+                        required artikalId,
+                      }) =>
+                          _openNovaNarudzba(
+                        initialKategorija: kategorija,
+                        initialArtikalId: artikalId,
+                      ),
                       onMojeNarudzbe: _openMojeNarudzbe,
                       onProfil: _openProfil,
                       onUsluge: () => _selectTab(2),

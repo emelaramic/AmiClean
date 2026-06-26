@@ -64,4 +64,10 @@ class ApiConfig {
 
   static String putCjenovnikUri(int cjenovnikId) =>
       '$baseUrl/api/Cjenovnik/PutCjenovnik/$cjenovnikId';
+
+  static String getPreporukeZaKorisnikaUri({
+    required int korisnikId,
+    int limit = 3,
+  }) =>
+      '$baseUrl/api/Preporuke/GetZaKorisnika?korisnikId=$korisnikId&limit=$limit';
 }
