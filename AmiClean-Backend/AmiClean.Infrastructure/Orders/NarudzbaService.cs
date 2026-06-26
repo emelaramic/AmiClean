@@ -1,3 +1,4 @@
+using AmiClean.Application.Notifications.Interfaces;
 using AmiClean.Application.Orders;
 using AmiClean.Application.Orders.Constants;
 using AmiClean.Application.Orders.Dtos;
@@ -11,10 +12,12 @@ namespace AmiClean.Infrastructure.Orders;
 public class NarudzbaService : INarudzbaService
 {
     private readonly AmiCleanContext _context;
+    private readonly INotifikacijaService _notifikacijaService;
 
-    public NarudzbaService(AmiCleanContext context)
+    public NarudzbaService(AmiCleanContext context, INotifikacijaService notifikacijaService)
     {
         _context = context;
+        _notifikacijaService = notifikacijaService;
     }
 
     public async Task<NarudzbaKreiranaDto> KreirajNarudzbuAsync(
@@ -392,6 +395,12 @@ public class NarudzbaService : INarudzbaService
         foreach (var stavka in narudzba.Stavke)
             stavka.FK_Status = statusStavkePrimljena.ID_Statusa;
 
+        _notifikacijaService.PlanirajStatusObavijest(
+            narudzba.FK_Korisnik,
+            narudzba.ID_Narudzbe,
+            NarudzbaStatusi.Primljena,
+            narudzba.Rok_Zavrsetka);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return new NarudzbaStatusPromjenaDto
@@ -459,6 +468,12 @@ public class NarudzbaService : INarudzbaService
 
         foreach (var stavka in narudzba.Stavke)
             stavka.FK_Status = noviStavkaStatus.ID_Statusa;
+
+        _notifikacijaService.PlanirajStatusObavijest(
+            narudzba.FK_Korisnik,
+            narudzba.ID_Narudzbe,
+            noviStatusNaziv,
+            narudzba.Rok_Zavrsetka);
 
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -543,6 +558,14 @@ public class NarudzbaService : INarudzbaService
 
             foreach (var logistika in narudzba.Logistike)
                 logistika.FK_Status = statusLogistikeOtkazano.ID_Statusa;
+        }
+
+        if (adminOtkazuje)
+        {
+            _notifikacijaService.PlanirajStatusObavijest(
+                narudzba.FK_Korisnik,
+                narudzba.ID_Narudzbe,
+                NarudzbaStatusi.Otkazana);
         }
 
         await _context.SaveChangesAsync(cancellationToken);

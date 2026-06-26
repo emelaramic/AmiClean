@@ -9,8 +9,10 @@ class KorisnikTopBar extends StatelessWidget {
     required this.selectedIndex,
     required this.onNavSelected,
     required this.cartCount,
+    required this.notifikacijeCount,
     required this.onNarudzba,
     required this.onCart,
+    required this.onNotifikacije,
     this.onMenuTap,
     this.onMojeNarudzbe,
     this.onProfil,
@@ -28,8 +30,10 @@ class KorisnikTopBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onNavSelected;
   final int cartCount;
+  final int notifikacijeCount;
   final VoidCallback onNarudzba;
   final VoidCallback onCart;
+  final VoidCallback onNotifikacije;
   final VoidCallback? onMenuTap;
   final VoidCallback? onMojeNarudzbe;
   final VoidCallback? onProfil;
@@ -72,6 +76,10 @@ class KorisnikTopBar extends StatelessWidget {
                   _NarudzbaButton(
                     compact: compact || tightNav,
                     onPressed: onNarudzba,
+                  ),
+                  _NotifikacijeButton(
+                    count: notifikacijeCount,
+                    onPressed: onNotifikacije,
                   ),
                   _CartButton(count: cartCount, onPressed: onCart),
                   if (!compact &&
@@ -285,6 +293,32 @@ class _AccountMenu extends StatelessWidget {
 }
 
 enum _AccountAction { narudzbe, profil, odjava }
+
+class _NotifikacijeButton extends StatelessWidget {
+  const _NotifikacijeButton({
+    required this.count,
+    required this.onPressed,
+  });
+
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: 'Obavijesti',
+      icon: Badge(
+        isLabelVisible: count > 0,
+        label: Text('$count'),
+        child: const Icon(
+          Icons.notifications_outlined,
+          color: AmiCleanColors.darkBlue,
+        ),
+      ),
+    );
+  }
+}
 
 class _CartButton extends StatelessWidget {
   const _CartButton({

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/api/api_client.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/cart/cart_session.dart';
 import '../../auth/services/korisnik_service.dart';
 import '../../katalog/screens/katalog_screen.dart';
+import '../../notifikacije/screens/notifikacije_screen.dart';
+import '../../notifikacije/services/notifikacija_service.dart';
 import '../../narudzba/screens/kosarica_screen.dart';
 import '../../narudzba/screens/moje_narudzbe_screen.dart';
 import '../../narudzba/screens/nova_narudzba_screen.dart';
@@ -33,7 +36,37 @@ class KorisnikShellScreen extends StatefulWidget {
 
 class _KorisnikShellScreenState extends State<KorisnikShellScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _notifikacijaApiClient = ApiClient();
+  late final _notifikacijaService =
+      NotifikacijaService(apiClient: _notifikacijaApiClient);
+
   int _selectedIndex = 0;
+  int _neprocitaneNotifikacije = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _ucitajBrojNotifikacija();
+  }
+
+  @override
+  void dispose() {
+    _notifikacijaApiClient.dispose();
+    super.dispose();
+  }
+
+  Future<void> _ucitajBrojNotifikacija() async {
+    try {
+      final broj = await _notifikacijaService.getBrojNeprocitanih(
+        widget.session.user!.id,
+      );
+      if (mounted) {
+        setState(() => _neprocitaneNotifikacije = broj);
+      }
+    } catch (_) {
+      // Badge je opcionalan — ne blokira shell.
+    }
+  }
 
   void _selectTab(int index) {
     setState(() => _selectedIndex = index);
@@ -64,6 +97,15 @@ class _KorisnikShellScreenState extends State<KorisnikShellScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openNotifikacije() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => NotifikacijeScreen(session: widget.session),
+      ),
+    );
+    await _ucitajBrojNotifikacija();
   }
 
   void _openMojeNarudzbe() {
@@ -107,8 +149,10 @@ class _KorisnikShellScreenState extends State<KorisnikShellScreen> {
                 selectedIndex: _selectedIndex,
                 onNavSelected: _selectTab,
                 cartCount: widget.cart.brojStavki,
+                notifikacijeCount: _neprocitaneNotifikacije,
                 onNarudzba: _openNovaNarudzba,
                 onCart: _openKosarica,
+                onNotifikacije: _openNotifikacije,
                 onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
                 onMojeNarudzbe: _openMojeNarudzbe,
                 onProfil: _openProfil,

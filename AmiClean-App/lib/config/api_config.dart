@@ -70,4 +70,19 @@ class ApiConfig {
     int limit = 3,
   }) =>
       '$baseUrl/api/Preporuke/GetZaKorisnika?korisnikId=$korisnikId&limit=$limit';
+
+  static String getNotifikacijeZaKorisnikaUri({required int korisnikId}) =>
+      '$baseUrl/api/Notifikacija/GetZaKorisnika?korisnikId=$korisnikId';
+
+  static String getBrojNeprocitanihNotifikacijaUri({required int korisnikId}) =>
+      '$baseUrl/api/Notifikacija/GetBrojNeprocitanih?korisnikId=$korisnikId';
+
+  static String oznaciNotifikacijuProcitanomUri({
+    required int notifikacijaId,
+    required int korisnikId,
+  }) =>
+      '$baseUrl/api/Notifikacija/OznaciProcitanom?notifikacijaId=$notifikacijaId&korisnikId=$korisnikId';
+
+  static String oznaciSveNotifikacijeProcitanimUri({required int korisnikId}) =>
+      '$baseUrl/api/Notifikacija/OznaciSveProcitanim?korisnikId=$korisnikId';
 }

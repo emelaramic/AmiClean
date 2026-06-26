@@ -116,6 +116,39 @@ class ApiClient {
     throw ServerApiException(message, statusCode: statusCode);
   }
 
+  Future<void> postEmpty(String url) async {
+    http.Response response;
+
+    try {
+      response = await _httpClient
+          .post(Uri.parse(url), headers: _jsonHeaders)
+          .timeout(_timeout);
+    } on TimeoutException {
+      throw const TimeoutApiException();
+    } on http.ClientException {
+      throw const NetworkApiException();
+    }
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    }
+
+    Map<String, dynamic>? payload;
+    if (response.body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) payload = decoded;
+      } on FormatException {
+        // plain text greška
+      }
+    }
+
+    final message = _extractErrorMessage(payload, response.body, response.statusCode);
+    if (response.statusCode == 401) throw UnauthorizedApiException(message);
+    if (response.statusCode == 400) throw ValidationApiException(message);
+    throw ServerApiException(message, statusCode: response.statusCode);
+  }
+
   Map<String, dynamic> _decodeResponse(http.Response response) {
     final statusCode = response.statusCode;
     Map<String, dynamic>? payload;

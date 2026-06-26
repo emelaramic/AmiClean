@@ -1,9 +1,11 @@
 using AmiClean.Application.Auth.Interfaces;
 using AmiClean.Application.Catalog.Interfaces;
+using AmiClean.Application.Notifications.Interfaces;
 using AmiClean.Application.Orders.Interfaces;
 using AmiClean.Application.Recommendations.Interfaces;
 using AmiClean.Infrastructure.Auth;
 using AmiClean.Infrastructure.Catalog;
+using AmiClean.Infrastructure.Notifications;
 using AmiClean.Infrastructure.Orders;
 using AmiClean.Infrastructure.Persistence;
 using AmiClean.Infrastructure.Recommendations;
@@ -26,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<INarudzbaService, NarudzbaService>();
         services.AddScoped<IPreporukaService, PreporukaService>();
+        services.AddScoped<INotifikacijaService, NotifikacijaService>();
 
         return services;
     }
