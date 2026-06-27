@@ -36,7 +36,6 @@ public class PrimijeniNarudzbuRequest
 {
     public int NarudzbaId { get; set; }
     public int ZaposlenikId { get; set; }
-    public DateTime RokZavrsetka { get; set; }
 }
 
 public class PromijeniStatusNarudzbeRequest
@@ -44,6 +43,14 @@ public class PromijeniStatusNarudzbeRequest
     public int NarudzbaId { get; set; }
     public int ZaposlenikId { get; set; }
     public string NoviStatusNaziv { get; set; } = null!;
+    public DateTime? RokZavrsetka { get; set; }
+}
+
+public class PromijeniRokZavrsetkaRequest
+{
+    public int NarudzbaId { get; set; }
+    public int ZaposlenikId { get; set; }
+    public DateTime RokZavrsetka { get; set; }
 }
 
 public class OtkaziNarudzbuRequest

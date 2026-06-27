@@ -358,9 +358,6 @@ public class NarudzbaService : INarudzbaService
         if (request.NarudzbaId <= 0 || request.ZaposlenikId <= 0)
             throw new NarudzbaValidationException("Identifikatori nisu ispravni.");
 
-        if (request.RokZavrsetka.Date < DateTime.Today)
-            throw new NarudzbaValidationException("Rok završetka ne može biti u prošlosti.");
-
         var zaposlenik = await _context.Zaposlenici
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -394,7 +391,6 @@ public class NarudzbaService : INarudzbaService
 
         narudzba.FK_Status = statusPrimljena.ID_Statusa;
         narudzba.FK_Primio_Zaposlenik = zaposlenik.ID_Zaposlenika;
-        narudzba.Rok_Zavrsetka = request.RokZavrsetka;
 
         foreach (var stavka in narudzba.Stavke)
             stavka.FK_Status = statusStavkePrimljena.ID_Statusa;
@@ -402,8 +398,7 @@ public class NarudzbaService : INarudzbaService
         _notifikacijaService.PlanirajStatusObavijest(
             narudzba.FK_Korisnik,
             narudzba.ID_Narudzbe,
-            NarudzbaStatusi.Primljena,
-            narudzba.Rok_Zavrsetka);
+            NarudzbaStatusi.Primljena);
 
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -411,8 +406,8 @@ public class NarudzbaService : INarudzbaService
         {
             Id = narudzba.ID_Narudzbe,
             StatusNaziv = NarudzbaStatusi.Primljena,
-            RokZavrsetka = narudzba.Rok_Zavrsetka,
-            Poruka = "Narudžba je primljena u čistionici. Rok završetka je potvrđen.",
+            RokZavrsetka = null,
+            Poruka = "Narudžba je primljena u čistionici. Rok završetka bit će potvrđen nakon pregleda.",
         };
     }
 
@@ -465,6 +460,18 @@ public class NarudzbaService : INarudzbaService
             ?? throw new NarudzbaValidationException(
                 $"Status stavke '{stavkaStatusNaziv}' nije definisan u bazi.");
 
+        if (noviStatusNaziv == NarudzbaStatusi.UObradi)
+        {
+            if (!request.RokZavrsetka.HasValue)
+            {
+                throw new NarudzbaValidationException(
+                    "Rok završetka je obavezan pri označavanju narudžbe u obradi.");
+            }
+
+            ValidirajRokZavrsetka(request.RokZavrsetka.Value);
+            narudzba.Rok_Zavrsetka = request.RokZavrsetka.Value;
+        }
+
         narudzba.FK_Status = noviStatus.ID_Statusa;
 
         if (noviStatusNaziv == NarudzbaStatusi.UObradi && narudzba.FK_Primio_Zaposlenik == null)
@@ -486,7 +493,55 @@ public class NarudzbaService : INarudzbaService
             Id = narudzba.ID_Narudzbe,
             StatusNaziv = noviStatusNaziv,
             RokZavrsetka = narudzba.Rok_Zavrsetka,
-            Poruka = NarudzbaStatusPrijelazi.GetPorukaPromjene(noviStatusNaziv),
+            Poruka = noviStatusNaziv == NarudzbaStatusi.UObradi && narudzba.Rok_Zavrsetka.HasValue
+                ? $"Narudžba je u obradi. Rok završetka: {narudzba.Rok_Zavrsetka:dd.MM.yyyy}."
+                : NarudzbaStatusPrijelazi.GetPorukaPromjene(noviStatusNaziv),
+        };
+    }
+
+    public async Task<NarudzbaStatusPromjenaDto> PromijeniRokZavrsetkaAsync(
+        PromijeniRokZavrsetkaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.NarudzbaId <= 0 || request.ZaposlenikId <= 0)
+            throw new NarudzbaValidationException("Identifikatori nisu ispravni.");
+
+        ValidirajRokZavrsetka(request.RokZavrsetka);
+
+        var zaposlenik = await _context.Zaposlenici
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                z => z.ID_Zaposlenika == request.ZaposlenikId && z.Aktivan,
+                cancellationToken)
+            ?? throw new NarudzbaValidationException("Zaposlenik nije pronađen.");
+
+        var narudzba = await _context.Narudzbe
+            .Include(n => n.Status)
+            .FirstOrDefaultAsync(n => n.ID_Narudzbe == request.NarudzbaId, cancellationToken)
+            ?? throw new NarudzbaValidationException("Narudžba nije pronađena.");
+
+        var status = narudzba.Status.Naziv;
+        if (status != NarudzbaStatusi.UObradi && status != NarudzbaStatusi.Gotova)
+        {
+            throw new NarudzbaValidationException(
+                "Rok završetka se može promijeniti samo dok je narudžba u obradi ili gotova.");
+        }
+
+        narudzba.Rok_Zavrsetka = request.RokZavrsetka;
+
+        _notifikacijaService.PlanirajRokAzuriran(
+            narudzba.FK_Korisnik,
+            narudzba.ID_Narudzbe,
+            request.RokZavrsetka);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return new NarudzbaStatusPromjenaDto
+        {
+            Id = narudzba.ID_Narudzbe,
+            StatusNaziv = status,
+            RokZavrsetka = narudzba.Rok_Zavrsetka,
+            Poruka = $"Rok završetka ažuriran: {request.RokZavrsetka:dd.MM.yyyy}.",
         };
     }
 
@@ -593,7 +648,7 @@ public class NarudzbaService : INarudzbaService
                 {
                     Tip = NarudzbaAdminAkcije.Primijeni,
                     Label = "Primijeni narudžbu",
-                    ZahtijevaRokZavrsetka = true,
+                    ZahtijevaRokZavrsetka = false,
                 },
                 new NarudzbaAdminAkcijaDto
                 {
@@ -604,19 +659,37 @@ public class NarudzbaService : INarudzbaService
             ];
         }
 
-        var sljedeci = NarudzbaStatusPrijelazi.GetSljedeci(statusNaziv);
-        if (sljedeci == null)
-            return [];
+        var akcije = new List<NarudzbaAdminAkcijaDto>();
 
-        return
-        [
-            new NarudzbaAdminAkcijaDto
+        var sljedeci = NarudzbaStatusPrijelazi.GetSljedeci(statusNaziv);
+        if (sljedeci != null)
+        {
+            akcije.Add(new NarudzbaAdminAkcijaDto
             {
                 Tip = NarudzbaAdminAkcije.PromijeniStatus,
                 Label = NarudzbaStatusPrijelazi.GetLabelAkcije(sljedeci),
                 SljedeciStatusNaziv = sljedeci,
-            },
-        ];
+                ZahtijevaRokZavrsetka = sljedeci == NarudzbaStatusi.UObradi,
+            });
+        }
+
+        if (statusNaziv == NarudzbaStatusi.UObradi || statusNaziv == NarudzbaStatusi.Gotova)
+        {
+            akcije.Add(new NarudzbaAdminAkcijaDto
+            {
+                Tip = NarudzbaAdminAkcije.PromijeniRok,
+                Label = "Promijeni rok završetka",
+                ZahtijevaRokZavrsetka = true,
+            });
+        }
+
+        return akcije;
+    }
+
+    private static void ValidirajRokZavrsetka(DateTime rok)
+    {
+        if (rok.Date < DateTime.Today)
+            throw new NarudzbaValidationException("Rok završetka ne može biti u prošlosti.");
     }
 
     private async Task<Narudzba?> UcitajNarudzbuZaDetaljAsync(

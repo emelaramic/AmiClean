@@ -41,6 +41,7 @@ public static class NarudzbaAdminAkcije
 {
     public const string Primijeni = "Primijeni";
     public const string PromijeniStatus = "PromijeniStatus";
+    public const string PromijeniRok = "PromijeniRok";
     public const string Otkazi = "Otkazi";
 }
 

@@ -30,6 +30,7 @@ class NarudzbaAdminAkcija {
 
   static const tipPrimijeni = 'Primijeni';
   static const tipPromijeniStatus = 'PromijeniStatus';
+  static const tipPromijeniRok = 'PromijeniRok';
   static const tipOtkazi = 'Otkazi';
 
   final String tip;

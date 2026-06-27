@@ -44,6 +44,24 @@ public class NotifikacijaService : INotifikacijaService
         });
     }
 
+    public void PlanirajRokAzuriran(int korisnikId, int narudzbaId, DateTime rokZavrsetka)
+    {
+        if (korisnikId <= 0 || narudzbaId <= 0)
+            return;
+
+        _context.Notifikacije.Add(new Notifikacija
+        {
+            FK_Korisnik = korisnikId,
+            FK_Narudzba = narudzbaId,
+            Kanal = NotifikacijaKanali.InApp,
+            Naslov = "Rok završetka ažuriran",
+            Poruka = $"Narudžba #{narudzbaId}: novi rok završetka je {rokZavrsetka:dd.MM.yyyy}.",
+            Datum_Slanja = DateTime.Now,
+            Status_Slanja = NotifikacijaStatusiSlanja.Poslano,
+            Procitano = false,
+        });
+    }
+
     public async Task<IReadOnlyList<NotifikacijaDto>> GetZaKorisnikaAsync(
         int korisnikId,
         CancellationToken cancellationToken = default)
@@ -147,10 +165,12 @@ internal static class NotifikacijaTekstovi
                 "Narudžba primljena",
                 rokZavrsetka.HasValue
                     ? $"Narudžba {broj} je primljena u čistionici. Rok završetka: {rokZavrsetka.Value:dd.MM.yyyy}."
-                    : $"Narudžba {broj} je primljena u čistionici."),
+                    : $"Narudžba {broj} je primljena u čistionici. Rok završetka bit će potvrđen nakon pregleda."),
             NarudzbaStatusi.UObradi => (
                 "Narudžba u obradi",
-                $"Narudžba {broj} je u obradi. Obavijestit ćemo vas kad bude spremna."),
+                rokZavrsetka.HasValue
+                    ? $"Narudžba {broj} je u obradi. Očekivani rok završetka: {rokZavrsetka.Value:dd.MM.yyyy}."
+                    : $"Narudžba {broj} je u obradi. Obavijestit ćemo vas kad bude spremna."),
             NarudzbaStatusi.Gotova => (
                 "Narudžba spremna",
                 $"Narudžba {broj} je gotova i spremna za preuzimanje ili dostavu."),

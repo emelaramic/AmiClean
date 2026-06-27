@@ -124,6 +124,20 @@ public class NarudzbaController : ControllerBase
     }
 
     [HttpPost]
+    public async Task<ActionResult<NarudzbaStatusPromjenaDto>> PromijeniRokZavrsetka(
+        PromijeniRokZavrsetkaRequest request)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.PromijeniRokZavrsetkaAsync(request));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost]
     public async Task<ActionResult<NarudzbaStatusPromjenaDto>> OtkaziNarudzbu(
         OtkaziNarudzbuRequest request)
     {

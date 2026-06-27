@@ -11,6 +11,8 @@ public interface INotifikacijaService
         string statusNaziv,
         DateTime? rokZavrsetka = null);
 
+    void PlanirajRokAzuriran(int korisnikId, int narudzbaId, DateTime rokZavrsetka);
+
     Task<IReadOnlyList<NotifikacijaDto>> GetZaKorisnikaAsync(
         int korisnikId,
         CancellationToken cancellationToken = default);

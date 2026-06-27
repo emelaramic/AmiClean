@@ -62,8 +62,7 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
       if (!mounted) return;
       setState(() {
         _narudzba = detalj;
-        _rokZavrsetka = detalj.rokZavrsetka ??
-            DateTime.now().add(const Duration(days: 3));
+        _rokZavrsetka = detalj.rokZavrsetka;
         _loading = false;
       });
     } on ApiException catch (e) {
@@ -97,9 +96,6 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
   }
 
   Future<void> _primijeniNarudzbu() async {
-    final rok = _rokZavrsetka;
-    if (rok == null) return;
-
     setState(() {
       _spremanje = true;
       _greska = null;
@@ -109,7 +105,6 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
       final rezultat = await _narudzbaService.primijeniNarudzbu(
         narudzbaId: widget.narudzbaId,
         zaposlenikId: widget.session.user!.id,
-        rokZavrsetka: rok,
       );
       if (!mounted) return;
 
@@ -199,6 +194,11 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
     final sljedeci = akcija.sljedeciStatusNaziv;
     if (sljedeci == null) return;
 
+    if (akcija.zahtijevaRokZavrsetka && _rokZavrsetka == null) {
+      setState(() => _greska = 'Odaberite rok završetka prije nastavka.');
+      return;
+    }
+
     setState(() {
       _spremanje = true;
       _greska = null;
@@ -209,6 +209,7 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
         narudzbaId: widget.narudzbaId,
         zaposlenikId: widget.session.user!.id,
         noviStatusNaziv: sljedeci,
+        rokZavrsetka: akcija.zahtijevaRokZavrsetka ? _rokZavrsetka : null,
       );
       if (!mounted) return;
 
@@ -229,6 +230,48 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
       if (!mounted) return;
       setState(() {
         _greska = 'Neuspješna promjena statusa.';
+        _spremanje = false;
+      });
+    }
+  }
+
+  Future<void> _promijeniRok() async {
+    final rok = _rokZavrsetka;
+    if (rok == null) {
+      setState(() => _greska = 'Odaberite novi rok završetka.');
+      return;
+    }
+
+    setState(() {
+      _spremanje = true;
+      _greska = null;
+    });
+
+    try {
+      final rezultat = await _narudzbaService.promijeniRokZavrsetka(
+        narudzbaId: widget.narudzbaId,
+        zaposlenikId: widget.session.user!.id,
+        rokZavrsetka: rok,
+      );
+      if (!mounted) return;
+
+      _promijenjeno = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(rezultat.poruka)),
+      );
+
+      await _ucitajDetalj(showLoading: false);
+      if (mounted) setState(() => _spremanje = false);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _greska = e.message;
+        _spremanje = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _greska = 'Ažuriranje roka nije uspjelo.';
         _spremanje = false;
       });
     }
@@ -319,6 +362,12 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
           _InfoSekcija(
             naslov: 'Rok završetka',
             vrijednost: _formatDatum(n.rokZavrsetka!),
+          )
+        else if (n.statusNaziv == NarudzbaStatusi.primljena ||
+            n.statusNaziv == NarudzbaStatusi.uObradi)
+          const _InfoSekcija(
+            naslov: 'Rok završetka',
+            vrijednost: 'Još nije potvrđen — postavlja se pri označavanju u obradi',
           ),
         if (n.napomena != null)
           _InfoSekcija(naslov: 'Napomena', vrijednost: n.napomena!),
@@ -373,34 +422,63 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
 
   Widget _buildAkcija(NarudzbaAdminAkcija akcija) {
     if (akcija.tip == NarudzbaAdminAkcija.tipPrimijeni) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OutlinedButton.icon(
-            onPressed: _spremanje ? null : _odaberiRokZavrsetka,
-            icon: const Icon(Icons.calendar_today_outlined),
-            label: Text(
-              _rokZavrsetka == null
-                  ? 'Odaberi rok završetka'
-                  : 'Rok: ${_formatDatumSamo(_rokZavrsetka!)}',
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: FilledButton.icon(
+          onPressed: _spremanje ? null : _primijeniNarudzbu,
+          icon: _spremanje
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.check_circle_outline),
+          label: Text(akcija.label),
+        ),
+      );
+    }
+
+    if (akcija.zahtijevaRokZavrsetka) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _spremanje ? null : _odaberiRokZavrsetka,
+              icon: const Icon(Icons.calendar_today_outlined),
+              label: Text(
+                _rokZavrsetka == null
+                    ? 'Odaberi rok završetka'
+                    : 'Rok: ${_formatDatumSamo(_rokZavrsetka!)}',
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: _spremanje || _rokZavrsetka == null
-                ? null
-                : _primijeniNarudzbu,
-            icon: _spremanje
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.check_circle_outline),
-            label: Text(akcija.label),
-          ),
-          const SizedBox(height: 12),
-        ],
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _spremanje || _rokZavrsetka == null
+                  ? null
+                  : () {
+                      if (akcija.tip == NarudzbaAdminAkcija.tipPromijeniRok) {
+                        _promijeniRok();
+                      } else {
+                        _promijeniStatus(akcija);
+                      }
+                    },
+              icon: _spremanje
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      akcija.tip == NarudzbaAdminAkcija.tipPromijeniRok
+                          ? Icons.edit_calendar_outlined
+                          : Icons.arrow_forward,
+                    ),
+              label: Text(akcija.label),
+            ),
+          ],
+        ),
       );
     }
 

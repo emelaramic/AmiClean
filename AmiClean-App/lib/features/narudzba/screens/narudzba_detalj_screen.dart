@@ -210,7 +210,10 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
         else
           _InfoSekcija(
             naslov: 'Rok završetka',
-            vrijednost: 'Bit će potvrđen nakon prijema u čistionici',
+            vrijednost: n.statusNaziv == NarudzbaStatusi.primljena ||
+                    n.statusNaziv == NarudzbaStatusi.uObradi
+                ? 'Bit će potvrđen nakon pregleda u čistionici'
+                : 'Bit će potvrđen nakon prijema u čistionici',
           ),
         if (n.napomena != null)
           _InfoSekcija(naslov: 'Napomena', vrijednost: n.napomena!),

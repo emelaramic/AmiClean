@@ -30,14 +30,12 @@ class NarudzbaService {
   Future<NarudzbaStatusPromjena> primijeniNarudzbu({
     required int narudzbaId,
     required int zaposlenikId,
-    required DateTime rokZavrsetka,
   }) async {
     final payload = await _apiClient.post(
       ApiConfig.primijeniNarudzbuUri,
       {
         'narudzbaId': narudzbaId,
         'zaposlenikId': zaposlenikId,
-        'rokZavrsetka': rokZavrsetka.toIso8601String(),
       },
     );
     return NarudzbaStatusPromjena.fromJson(payload);
@@ -47,6 +45,7 @@ class NarudzbaService {
     required int narudzbaId,
     required int zaposlenikId,
     required String noviStatusNaziv,
+    DateTime? rokZavrsetka,
   }) async {
     final payload = await _apiClient.post(
       ApiConfig.promijeniStatusNarudzbeUri,
@@ -54,6 +53,24 @@ class NarudzbaService {
         'narudzbaId': narudzbaId,
         'zaposlenikId': zaposlenikId,
         'noviStatusNaziv': noviStatusNaziv,
+        if (rokZavrsetka != null)
+          'rokZavrsetka': rokZavrsetka.toIso8601String(),
+      },
+    );
+    return NarudzbaStatusPromjena.fromJson(payload);
+  }
+
+  Future<NarudzbaStatusPromjena> promijeniRokZavrsetka({
+    required int narudzbaId,
+    required int zaposlenikId,
+    required DateTime rokZavrsetka,
+  }) async {
+    final payload = await _apiClient.post(
+      ApiConfig.promijeniRokZavrsetkaUri,
+      {
+        'narudzbaId': narudzbaId,
+        'zaposlenikId': zaposlenikId,
+        'rokZavrsetka': rokZavrsetka.toIso8601String(),
       },
     );
     return NarudzbaStatusPromjena.fromJson(payload);

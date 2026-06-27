@@ -58,6 +58,9 @@ class ApiConfig {
   static String get promijeniStatusNarudzbeUri =>
       '$baseUrl/api/Narudzba/PromijeniStatusNarudzbe';
 
+  static String get promijeniRokZavrsetkaUri =>
+      '$baseUrl/api/Narudzba/PromijeniRokZavrsetka';
+
   static String get otkaziNarudzbuUri => '$baseUrl/api/Narudzba/OtkaziNarudzbu';
 
   static String get getCjenovnikUri => '$baseUrl/api/Cjenovnik/GetCjenovnik';
