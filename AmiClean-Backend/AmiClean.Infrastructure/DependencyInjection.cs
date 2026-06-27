@@ -3,12 +3,14 @@ using AmiClean.Application.Catalog.Interfaces;
 using AmiClean.Application.Notifications.Interfaces;
 using AmiClean.Application.Orders.Interfaces;
 using AmiClean.Application.Recommendations.Interfaces;
+using AmiClean.Application.Reviews.Interfaces;
 using AmiClean.Infrastructure.Auth;
 using AmiClean.Infrastructure.Catalog;
 using AmiClean.Infrastructure.Notifications;
 using AmiClean.Infrastructure.Orders;
 using AmiClean.Infrastructure.Persistence;
 using AmiClean.Infrastructure.Recommendations;
+using AmiClean.Infrastructure.Reviews;
 using AmiClean.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<INarudzbaService, NarudzbaService>();
         services.AddScoped<IPreporukaService, PreporukaService>();
         services.AddScoped<INotifikacijaService, NotifikacijaService>();
+        services.AddScoped<IRecenzijaService, RecenzijaService>();
 
         return services;
     }

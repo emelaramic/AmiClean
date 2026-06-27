@@ -202,6 +202,10 @@ class _NarudzbaKartica extends StatelessWidget {
                     ),
                   ),
                   _StatusChip(status: narudzba.statusNaziv),
+                  if (narudzba.mozeSeRecenzirati) ...[
+                    const SizedBox(width: 8),
+                    _OcijeniChip(),
+                  ],
                 ],
               ),
               const SizedBox(height: 8),
@@ -265,6 +269,33 @@ class _StatusChip extends StatelessWidget {
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
+      ),
+    );
+  }
+}
+
+class _OcijeniChip extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade800),
+          const SizedBox(width: 4),
+          Text(
+            'Ocijeni',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.amber.shade900,
+                ),
+          ),
+        ],
       ),
     );
   }

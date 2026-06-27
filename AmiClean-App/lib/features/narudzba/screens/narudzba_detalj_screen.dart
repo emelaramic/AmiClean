@@ -4,6 +4,8 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../katalog/utils/cijena_display.dart';
+import '../../recenzije/services/recenzija_service.dart';
+import '../../recenzije/widgets/recenzija_sekcija.dart';
 import '../models/narudzba_pregled.dart';
 import '../models/narudzba_status.dart';
 import '../services/narudzba_service.dart';
@@ -25,6 +27,7 @@ class NarudzbaDetaljScreen extends StatefulWidget {
 class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
   final _apiClient = ApiClient();
   late final _narudzbaService = NarudzbaService(apiClient: _apiClient);
+  late final _recenzijaService = RecenzijaService(apiClient: _apiClient);
 
   NarudzbaDetalj? _narudzba;
   bool _loading = true;
@@ -256,6 +259,25 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+          ),
+        ],
+        if (n.recenzija != null) ...[
+          const SizedBox(height: 24),
+          RecenzijaPregledSekcija(recenzija: n.recenzija!),
+        ] else if (n.mozeSeRecenzirati) ...[
+          const SizedBox(height: 24),
+          RecenzijaFormSekcija(
+            recenzijaService: _recenzijaService,
+            korisnikId: widget.session.user!.id,
+            narudzbaId: widget.narudzbaId,
+            onUspjesnoPoslano: () async {
+              _promijenjeno = true;
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Hvala na recenziji!')),
+              );
+              await _ucitajDetalj(showLoading: false);
+            },
           ),
         ],
       ],

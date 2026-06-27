@@ -156,7 +156,8 @@ internal static class NotifikacijaTekstovi
                 $"Narudžba {broj} je gotova i spremna za preuzimanje ili dostavu."),
             NarudzbaStatusi.Preuzeta => (
                 "Narudžba preuzeta",
-                $"Narudžba {broj} je označena kao preuzeta. Hvala vam na povjerenju!"),
+                $"Narudžba {broj} je označena kao preuzeta. Hvala vam na povjerenju! "
+                    + "Ocijenite uslugu u detaljima narudžbe."),
             NarudzbaStatusi.Otkazana => (
                 "Narudžba otkazana",
                 $"Narudžba {broj} je otkazana. Za detalje nas možete kontaktirati."),

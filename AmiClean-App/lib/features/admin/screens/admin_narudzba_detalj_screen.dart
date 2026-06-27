@@ -8,6 +8,7 @@ import '../../narudzba/models/nacin_predaje.dart';
 import '../../narudzba/models/narudzba_admin.dart';
 import '../../narudzba/models/narudzba_pregled.dart';
 import '../../narudzba/services/narudzba_service.dart';
+import '../../recenzije/widgets/recenzija_sekcija.dart';
 
 class AdminNarudzbaDetaljScreen extends StatefulWidget {
   const AdminNarudzbaDetaljScreen({
@@ -339,6 +340,13 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
             ),
           ],
         ),
+        if (n.recenzija != null) ...[
+          const SizedBox(height: 24),
+          RecenzijaPregledSekcija(
+            recenzija: n.recenzija!,
+            naslov: 'Recenzija korisnika',
+          ),
+        ],
         if (n.dozvoljeneAkcije.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text(

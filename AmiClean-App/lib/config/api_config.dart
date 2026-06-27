@@ -85,4 +85,6 @@ class ApiConfig {
 
   static String oznaciSveNotifikacijeProcitanimUri({required int korisnikId}) =>
       '$baseUrl/api/Notifikacija/OznaciSveProcitanim?korisnikId=$korisnikId';
+
+  static String get kreirajRecenzijuUri => '$baseUrl/api/Recenzija/KreirajRecenziju';
 }

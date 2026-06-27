@@ -5,6 +5,7 @@ using AmiClean.Application.Orders.Dtos;
 using AmiClean.Application.Orders.Interfaces;
 using AmiClean.Domain.Entities;
 using AmiClean.Infrastructure.Persistence;
+using AmiClean.Infrastructure.Reviews;
 using Microsoft.EntityFrameworkCore;
 
 namespace AmiClean.Infrastructure.Orders;
@@ -247,6 +248,8 @@ public class NarudzbaService : INarudzbaService
                 NacinPredaje = n.Nacin_Predaje,
                 UkupnaCijena = n.Ukupna_Cijena,
                 BrojStavki = n.Stavke.Count,
+                MozeSeRecenzirati =
+                    n.Status.Naziv == NarudzbaStatusi.Preuzeta && n.Recenzija == null,
             })
             .ToListAsync(cancellationToken);
 
@@ -267,6 +270,7 @@ public class NarudzbaService : INarudzbaService
         var narudzba = await _context.Narudzbe
             .AsNoTracking()
             .Include(n => n.Status)
+            .Include(n => n.Recenzija)
             .Include(n => n.Stavke).ThenInclude(s => s.Artikal)
             .Include(n => n.Stavke).ThenInclude(s => s.Usluge).ThenInclude(u => u.Usluga)
             .Include(n => n.Logistike)
@@ -623,6 +627,7 @@ public class NarudzbaService : INarudzbaService
             .AsNoTracking()
             .Include(n => n.Korisnik)
             .Include(n => n.Status)
+            .Include(n => n.Recenzija)
             .Include(n => n.Stavke).ThenInclude(s => s.Artikal)
             .Include(n => n.Stavke).ThenInclude(s => s.Usluge).ThenInclude(u => u.Usluga)
             .Include(n => n.Logistike)
@@ -647,6 +652,9 @@ public class NarudzbaService : INarudzbaService
             AdresaPreuzimanja = adresa,
             RokZavrsetka = narudzba.Rok_Zavrsetka,
             MozeSeOtkazati = NarudzbaStatusPrijelazi.MozeSeOtkazati(narudzba.Status.Naziv),
+            MozeSeRecenzirati =
+                narudzba.Status.Naziv == NarudzbaStatusi.Preuzeta && narudzba.Recenzija == null,
+            Recenzija = RecenzijaService.MapDto(narudzba.Recenzija),
             Stavke = narudzba.Stavke
                 .OrderBy(s => s.ID_Stavke)
                 .Select(s => new StavkaPregledDto

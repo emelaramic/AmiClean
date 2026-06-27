@@ -1,5 +1,6 @@
 import 'narudzba_pregled.dart';
 import 'narudzba_status.dart';
+import '../../recenzije/models/recenzija.dart';
 
 export 'narudzba_status.dart';
 
@@ -60,6 +61,7 @@ class NarudzbaAdminDetalj {
     this.korisnikAdresaStanovanja,
     required this.mozeSePrimijeti,
     required this.dozvoljeneAkcije,
+    this.recenzija,
   });
 
   final int id;
@@ -79,9 +81,11 @@ class NarudzbaAdminDetalj {
   final String? korisnikAdresaStanovanja;
   final bool mozeSePrimijeti;
   final List<NarudzbaAdminAkcija> dozvoljeneAkcije;
+  final Recenzija? recenzija;
 
   factory NarudzbaAdminDetalj.fromJson(Map<String, dynamic> json) {
     final stavkeJson = json['stavke'] as List<dynamic>? ?? [];
+    final recenzijaJson = json['recenzija'] as Map<String, dynamic>?;
     return NarudzbaAdminDetalj(
       id: json['id'] as int,
       datumKreiranja: DateTime.parse(json['datumKreiranja'] as String),
@@ -106,6 +110,9 @@ class NarudzbaAdminDetalj {
       dozvoljeneAkcije: (json['dozvoljeneAkcije'] as List<dynamic>? ?? [])
           .map((e) => NarudzbaAdminAkcija.fromJson(e as Map<String, dynamic>))
           .toList(),
+      recenzija: recenzijaJson == null
+          ? null
+          : Recenzija.fromJson(recenzijaJson),
     );
   }
 }

@@ -1,3 +1,5 @@
+using AmiClean.Application.Reviews.Dtos;
+
 namespace AmiClean.Application.Orders.Dtos;
 
 public class NarudzbaPregledDto
@@ -9,6 +11,7 @@ public class NarudzbaPregledDto
     public string NacinPredajeNaziv { get; set; } = null!;
     public decimal UkupnaCijena { get; set; }
     public int BrojStavki { get; set; }
+    public bool MozeSeRecenzirati { get; set; }
 }
 
 public class NarudzbaDetaljDto
@@ -24,6 +27,8 @@ public class NarudzbaDetaljDto
     public DateTime? RokZavrsetka { get; set; }
     public IReadOnlyList<StavkaPregledDto> Stavke { get; set; } = [];
     public bool MozeSeOtkazati { get; set; }
+    public bool MozeSeRecenzirati { get; set; }
+    public RecenzijaDto? Recenzija { get; set; }
 }
 
 public class StavkaPregledDto

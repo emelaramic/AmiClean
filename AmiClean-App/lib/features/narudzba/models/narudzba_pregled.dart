@@ -1,3 +1,5 @@
+import '../../recenzije/models/recenzija.dart';
+
 class NarudzbaPregled {
   const NarudzbaPregled({
     required this.id,
@@ -7,6 +9,7 @@ class NarudzbaPregled {
     required this.nacinPredajeNaziv,
     required this.ukupnaCijena,
     required this.brojStavki,
+    required this.mozeSeRecenzirati,
   });
 
   final int id;
@@ -16,6 +19,7 @@ class NarudzbaPregled {
   final String nacinPredajeNaziv;
   final double ukupnaCijena;
   final int brojStavki;
+  final bool mozeSeRecenzirati;
 
   factory NarudzbaPregled.fromJson(Map<String, dynamic> json) {
     return NarudzbaPregled(
@@ -26,6 +30,7 @@ class NarudzbaPregled {
       nacinPredajeNaziv: json['nacinPredajeNaziv'] as String,
       ukupnaCijena: (json['ukupnaCijena'] as num).toDouble(),
       brojStavki: json['brojStavki'] as int,
+      mozeSeRecenzirati: json['mozeSeRecenzirati'] as bool? ?? false,
     );
   }
 }
@@ -43,6 +48,8 @@ class NarudzbaDetalj {
     this.rokZavrsetka,
     required this.stavke,
     required this.mozeSeOtkazati,
+    required this.mozeSeRecenzirati,
+    this.recenzija,
   });
 
   final int id;
@@ -56,9 +63,12 @@ class NarudzbaDetalj {
   final DateTime? rokZavrsetka;
   final List<StavkaPregled> stavke;
   final bool mozeSeOtkazati;
+  final bool mozeSeRecenzirati;
+  final Recenzija? recenzija;
 
   factory NarudzbaDetalj.fromJson(Map<String, dynamic> json) {
     final stavkeJson = json['stavke'] as List<dynamic>? ?? [];
+    final recenzijaJson = json['recenzija'] as Map<String, dynamic>?;
     return NarudzbaDetalj(
       id: json['id'] as int,
       datumKreiranja: DateTime.parse(json['datumKreiranja'] as String),
@@ -75,6 +85,10 @@ class NarudzbaDetalj {
           .map((e) => StavkaPregled.fromJson(e as Map<String, dynamic>))
           .toList(),
       mozeSeOtkazati: json['mozeSeOtkazati'] as bool? ?? false,
+      mozeSeRecenzirati: json['mozeSeRecenzirati'] as bool? ?? false,
+      recenzija: recenzijaJson == null
+          ? null
+          : Recenzija.fromJson(recenzijaJson),
     );
   }
 }
