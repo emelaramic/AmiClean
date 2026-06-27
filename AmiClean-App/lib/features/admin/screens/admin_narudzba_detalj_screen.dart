@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
+import '../../../core/theme/amiclean_colors.dart';
 import '../../katalog/utils/cijena_display.dart';
 import '../../narudzba/models/nacin_predaje.dart';
 import '../../narudzba/models/narudzba_admin.dart';
@@ -318,9 +319,11 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
 
     final n = _narudzba!;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
+    return ColoredBox(
+      color: AmiCleanColors.mistBlue,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
         if (_greska != null) ...[
           Text(
             _greska!,
@@ -417,6 +420,7 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
           ),
         ],
       ],
+      ),
     );
   }
 

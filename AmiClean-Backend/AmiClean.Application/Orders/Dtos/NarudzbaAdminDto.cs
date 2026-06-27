@@ -67,3 +67,16 @@ public class NarudzbaStatusPromjenaDto
     public DateTime? RokZavrsetka { get; set; }
     public string Poruka { get; set; } = null!;
 }
+
+public class StatusBrojDto
+{
+    public string StatusNaziv { get; set; } = null!;
+    public int Broj { get; set; }
+}
+
+public class BrojNarudzbiPoStatusuDto
+{
+    public int Ukupno { get; set; }
+    public int Aktivne { get; set; }
+    public IReadOnlyList<StatusBrojDto> PoStatusu { get; set; } = [];
+}

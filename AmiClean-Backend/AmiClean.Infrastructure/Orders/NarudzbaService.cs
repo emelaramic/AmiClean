@@ -286,8 +286,12 @@ public class NarudzbaService : INarudzbaService
 
     public async Task<IReadOnlyList<NarudzbaAdminPregledDto>> GetSveNarudzbeAsync(
         string? statusNaziv = null,
+        int? limit = null,
         CancellationToken cancellationToken = default)
     {
+        if (limit is <= 0)
+            throw new NarudzbaValidationException("Limit mora biti veći od nule.");
+
         var upit = _context.Narudzbe.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(statusNaziv))
@@ -296,8 +300,12 @@ public class NarudzbaService : INarudzbaService
             upit = upit.Where(n => n.Status.Naziv == filter);
         }
 
+        upit = upit.OrderByDescending(n => n.Datum_Prijema);
+
+        if (limit.HasValue)
+            upit = upit.Take(limit.Value);
+
         var narudzbe = await upit
-            .OrderByDescending(n => n.Datum_Prijema)
             .Select(n => new NarudzbaAdminPregledDto
             {
                 Id = n.ID_Narudzbe,
@@ -315,6 +323,35 @@ public class NarudzbaService : INarudzbaService
             n.NacinPredajeNaziv = NacinPredajeNazivi.ZaPrikaz(n.NacinPredaje);
 
         return narudzbe;
+    }
+
+    public async Task<BrojNarudzbiPoStatusuDto> GetBrojNarudzbiPoStatusuAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var poStatusu = await _context.Narudzbe
+            .AsNoTracking()
+            .GroupBy(n => n.Status.Naziv)
+            .Select(g => new StatusBrojDto
+            {
+                StatusNaziv = g.Key,
+                Broj = g.Count(),
+            })
+            .OrderBy(s => s.StatusNaziv)
+            .ToListAsync(cancellationToken);
+
+        var ukupno = poStatusu.Sum(s => s.Broj);
+        var aktivne = poStatusu
+            .Where(s =>
+                s.StatusNaziv != NarudzbaStatusi.Preuzeta &&
+                s.StatusNaziv != NarudzbaStatusi.Otkazana)
+            .Sum(s => s.Broj);
+
+        return new BrojNarudzbiPoStatusuDto
+        {
+            Ukupno = ukupno,
+            Aktivne = aktivne,
+            PoStatusu = poStatusu,
+        };
     }
 
     public async Task<NarudzbaAdminDetaljDto> GetDetaljNarudzbeAdminAsync(

@@ -19,6 +19,10 @@ public interface INarudzbaService
 
     Task<IReadOnlyList<NarudzbaAdminPregledDto>> GetSveNarudzbeAsync(
         string? statusNaziv = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
+
+    Task<BrojNarudzbiPoStatusuDto> GetBrojNarudzbiPoStatusuAsync(
         CancellationToken cancellationToken = default);
 
     Task<NarudzbaAdminDetaljDto> GetDetaljNarudzbeAdminAsync(

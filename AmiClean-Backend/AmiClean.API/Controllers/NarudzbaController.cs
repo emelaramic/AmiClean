@@ -69,16 +69,23 @@ public class NarudzbaController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<NarudzbaAdminPregledDto>>> GetSveNarudzbe(
-        [FromQuery] string? statusNaziv = null)
+        [FromQuery] string? statusNaziv = null,
+        [FromQuery] int? limit = null)
     {
         try
         {
-            return Ok(await _narudzbaService.GetSveNarudzbeAsync(statusNaziv));
+            return Ok(await _narudzbaService.GetSveNarudzbeAsync(statusNaziv, limit));
         }
         catch (NarudzbaValidationException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<BrojNarudzbiPoStatusuDto>> GetBrojNarudzbiPoStatusu()
+    {
+        return Ok(await _narudzbaService.GetBrojNarudzbiPoStatusuAsync());
     }
 
     [HttpGet]

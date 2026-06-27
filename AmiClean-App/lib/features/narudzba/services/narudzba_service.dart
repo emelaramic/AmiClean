@@ -1,5 +1,6 @@
 import '../../../config/api_config.dart';
 import '../../../core/api/api_client.dart';
+import '../models/narudzba_statistika.dart';
 import '../models/cart_stavka.dart';
 import '../models/nacin_predaje.dart';
 import '../models/narudzba_admin.dart';
@@ -11,13 +12,21 @@ class NarudzbaService {
 
   final ApiClient _apiClient;
 
-  Future<List<NarudzbaAdminPregled>> getSveNarudzbe({String? statusNaziv}) async {
+  Future<List<NarudzbaAdminPregled>> getSveNarudzbe({
+    String? statusNaziv,
+    int? limit,
+  }) async {
     final payload = await _apiClient.getList(
-      ApiConfig.getSveNarudzbeUriFiltered(statusNaziv),
+      ApiConfig.getSveNarudzbeUriFiltered(statusNaziv, limit: limit),
     );
     return payload
         .map((e) => NarudzbaAdminPregled.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<NarudzbaStatistika> getBrojNarudzbiPoStatusu() async {
+    final payload = await _apiClient.get(ApiConfig.getBrojNarudzbiPoStatusuUri);
+    return NarudzbaStatistika.fromJson(payload);
   }
 
   Future<NarudzbaAdminDetalj> getDetaljNarudzbeAdmin(int narudzbaId) async {

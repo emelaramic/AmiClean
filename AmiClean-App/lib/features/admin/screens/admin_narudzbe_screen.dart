@@ -3,15 +3,21 @@ import 'package:flutter/material.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
-import '../../katalog/utils/cijena_display.dart';
+import '../../../core/theme/amiclean_colors.dart';
 import '../../narudzba/models/narudzba_admin.dart';
 import '../../narudzba/services/narudzba_service.dart';
+import '../widgets/admin_narudzba_kartica.dart';
 import 'admin_narudzba_detalj_screen.dart';
 
 class AdminNarudzbeScreen extends StatefulWidget {
-  const AdminNarudzbeScreen({super.key, required this.session});
+  const AdminNarudzbeScreen({
+    super.key,
+    required this.session,
+    this.initialFilterStatus,
+  });
 
   final AuthSession session;
+  final String? initialFilterStatus;
 
   @override
   State<AdminNarudzbeScreen> createState() => _AdminNarudzbeScreenState();
@@ -24,11 +30,12 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
   List<NarudzbaAdminPregled> _narudzbe = [];
   bool _loading = true;
   String? _greska;
-  String? _filterStatus;
+  late String? _filterStatus;
 
   @override
   void initState() {
     super.initState();
+    _filterStatus = widget.initialFilterStatus;
     _ucitajNarudzbe();
   }
 
@@ -102,32 +109,53 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildFilterBar(),
-          Expanded(child: _buildBody()),
-        ],
+      body: ColoredBox(
+        color: AmiCleanColors.mistBlue,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildFilterBar(),
+            Expanded(child: _buildBody()),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFilterBar() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: NarudzbaStatusi.filterOpcije.entries.map((entry) {
-          final selected = _filterStatus == entry.key;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(entry.value),
-              selected: selected,
-              onSelected: (_) => _postaviFilter(entry.key),
-            ),
-          );
-        }).toList(),
+    return Material(
+      color: Colors.white,
+      elevation: 1,
+      shadowColor: AmiCleanColors.darkBlue.withValues(alpha: 0.06),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          children: NarudzbaStatusi.filterOpcije.entries.map((entry) {
+            final selected = _filterStatus == entry.key;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(entry.value),
+                selected: selected,
+                showCheckmark: false,
+                selectedColor: AmiCleanColors.darkBlue.withValues(alpha: 0.12),
+                labelStyle: TextStyle(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected
+                      ? AmiCleanColors.darkBlue
+                      : AmiCleanColors.slateBlue,
+                ),
+                side: BorderSide(
+                  color: selected
+                      ? AmiCleanColors.darkBlue
+                      : AmiCleanColors.softBlue.withValues(alpha: 0.6),
+                ),
+                onSelected: (_) => _postaviFilter(entry.key),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -165,6 +193,9 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
                 ? 'Nema narudžbi u sistemu.'
                 : 'Nema narudžbi sa statusom "${NarudzbaStatusi.filterOpcije[_filterStatus]}".',
             textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AmiCleanColors.slateBlue.withValues(alpha: 0.95),
+            ),
           ),
         ),
       );
@@ -178,117 +209,11 @@ class _AdminNarudzbeScreenState extends State<AdminNarudzbeScreen> {
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final n = _narudzbe[index];
-          return _AdminNarudzbaKartica(
+          return AdminNarudzbaKartica(
             narudzba: n,
             onTap: () => _otvoriDetalj(n),
           );
         },
-      ),
-    );
-  }
-}
-
-class _AdminNarudzbaKartica extends StatelessWidget {
-  const _AdminNarudzbaKartica({required this.narudzba, required this.onTap});
-
-  final NarudzbaAdminPregled narudzba;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Narudžba #${narudzba.id}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  _StatusChip(status: narudzba.statusNaziv),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                narudzba.korisnikPunoIme,
-                style: theme.textTheme.titleSmall,
-              ),
-              if (narudzba.korisnikTelefon != null)
-                Text(
-                  narudzba.korisnikTelefon!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              const SizedBox(height: 8),
-              Text(
-                _formatDatum(narudzba.datumKreiranja),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              Text(narudzba.nacinPredajeNaziv),
-              Text('${narudzba.brojStavki} stavki'),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    CijenaDisplay.km(narudzba.ukupnaCijena),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatDatum(DateTime dt) {
-    final d = dt.day.toString().padLeft(2, '0');
-    final m = dt.month.toString().padLeft(2, '0');
-    final h = dt.hour.toString().padLeft(2, '0');
-    final min = dt.minute.toString().padLeft(2, '0');
-    return '$d.$m.${dt.year}. $h:$min';
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        status,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
       ),
     );
   }

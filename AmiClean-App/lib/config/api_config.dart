@@ -42,12 +42,20 @@ class ApiConfig {
 
   static String get getSveNarudzbeUri => '$baseUrl/api/Narudzba/GetSveNarudzbe';
 
-  static String getSveNarudzbeUriFiltered(String? statusNaziv) {
-    if (statusNaziv == null || statusNaziv.isEmpty) {
-      return getSveNarudzbeUri;
+  static String getSveNarudzbeUriFiltered(String? statusNaziv, {int? limit}) {
+    final params = <String>[];
+    if (statusNaziv != null && statusNaziv.isNotEmpty) {
+      params.add('statusNaziv=${Uri.encodeComponent(statusNaziv)}');
     }
-    return '$getSveNarudzbeUri?statusNaziv=${Uri.encodeComponent(statusNaziv)}';
+    if (limit != null) {
+      params.add('limit=$limit');
+    }
+    if (params.isEmpty) return getSveNarudzbeUri;
+    return '$getSveNarudzbeUri?${params.join('&')}';
   }
+
+  static String get getBrojNarudzbiPoStatusuUri =>
+      '$baseUrl/api/Narudzba/GetBrojNarudzbiPoStatusu';
 
   static String getDetaljNarudzbeAdminUri(int narudzbaId) =>
       '$baseUrl/api/Narudzba/GetDetaljNarudzbeAdmin?narudzbaId=$narudzbaId';
