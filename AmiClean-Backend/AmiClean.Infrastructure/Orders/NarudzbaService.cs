@@ -1,3 +1,4 @@
+using AmiClean.Application.Coupons.Interfaces;
 using AmiClean.Application.Notifications.Interfaces;
 using AmiClean.Application.Orders;
 using AmiClean.Application.Orders.Constants;
@@ -14,11 +15,16 @@ public class NarudzbaService : INarudzbaService
 {
     private readonly AmiCleanContext _context;
     private readonly INotifikacijaService _notifikacijaService;
+    private readonly IKuponService _kuponService;
 
-    public NarudzbaService(AmiCleanContext context, INotifikacijaService notifikacijaService)
+    public NarudzbaService(
+        AmiCleanContext context,
+        INotifikacijaService notifikacijaService,
+        IKuponService kuponService)
     {
         _context = context;
         _notifikacijaService = notifikacijaService;
+        _kuponService = kuponService;
     }
 
     public async Task<NarudzbaKreiranaDto> KreirajNarudzbuAsync(
@@ -47,6 +53,28 @@ public class NarudzbaService : INarudzbaService
         var pripremeneStavke = await PripremiStavkeAsync(request.Stavke, cancellationToken);
         var ukupnaCijena = pripremeneStavke.Sum(s => s.Ukupno);
 
+        decimal popustIznos = 0;
+        Kupon? primijenjeniKupon = null;
+
+        if (!string.IsNullOrWhiteSpace(request.KuponKod))
+        {
+            try
+            {
+                var kuponRezultat = await _kuponService.RijesiZaNarudzbuAsync(
+                    request.KuponKod,
+                    ukupnaCijena,
+                    cancellationToken);
+                primijenjeniKupon = kuponRezultat.Kupon;
+                popustIznos = kuponRezultat.PopustIznos;
+            }
+            catch (Application.Coupons.KuponValidationException ex)
+            {
+                throw new NarudzbaValidationException(ex.Message);
+            }
+        }
+
+        var ukupnoZaPlatiti = ukupnaCijena - popustIznos;
+
         var nacinZavrsetka = request.NacinPredaje == NacinPredajeVrijednosti.PreuzimanjeIDostava
             ? NacinZavrsetkaVrijednosti.Dostava
             : NacinZavrsetkaVrijednosti.PreuzimanjeURadnji;
@@ -56,13 +84,14 @@ public class NarudzbaService : INarudzbaService
         var narudzba = new Narudzba
         {
             FK_Korisnik = korisnik.ID_Korisnika,
+            FK_Kupon = primijenjeniKupon?.ID_Kupona,
             FK_Status = statusNarudzbe.ID_Statusa,
             Kanal = NarudzbaKanali.Aplikacija,
             Nacin_Predaje = request.NacinPredaje,
             Nacin_Zavrsetka = nacinZavrsetka,
             Datum_Prijema = DateTime.Now,
             Ukupna_Cijena = ukupnaCijena,
-            Popust_Iznos = 0,
+            Popust_Iznos = popustIznos,
             Napomena = string.IsNullOrWhiteSpace(request.Napomena) ? null : request.Napomena.Trim(),
         };
 
@@ -113,12 +142,20 @@ public class NarudzbaService : INarudzbaService
             ? "Narudžba je kreirana. Donijet ćete stvari u čistionicu — rok završetka bit će potvrđen nakon prijema."
             : "Narudžba je kreirana. Kontaktirat ćemo vas za preuzimanje — rok završetka bit će potvrđen nakon prijema stvari.";
 
+        if (popustIznos > 0)
+        {
+            poruka += $" Primijenjen popust: {popustIznos:0.00} KM.";
+        }
+
         return new NarudzbaKreiranaDto
         {
             Id = narudzba.ID_Narudzbe,
             StatusNaziv = statusNarudzbe.Naziv,
             NacinPredaje = request.NacinPredaje,
             UkupnaCijena = ukupnaCijena,
+            PopustIznos = popustIznos,
+            UkupnoZaPlatiti = ukupnoZaPlatiti,
+            KuponKod = primijenjeniKupon?.Kod,
             DatumKreiranja = narudzba.Datum_Prijema,
             Poruka = poruka,
         };
@@ -247,6 +284,9 @@ public class NarudzbaService : INarudzbaService
                 StatusNaziv = n.Status.Naziv,
                 NacinPredaje = n.Nacin_Predaje,
                 UkupnaCijena = n.Ukupna_Cijena,
+                PopustIznos = n.Popust_Iznos,
+                UkupnoZaPlatiti = n.Ukupna_Cijena - n.Popust_Iznos,
+                KuponKod = n.Kupon != null ? n.Kupon.Kod : null,
                 BrojStavki = n.Stavke.Count,
                 MozeSeRecenzirati =
                     n.Status.Naziv == NarudzbaStatusi.Preuzeta && n.Recenzija == null,
@@ -270,6 +310,7 @@ public class NarudzbaService : INarudzbaService
         var narudzba = await _context.Narudzbe
             .AsNoTracking()
             .Include(n => n.Status)
+            .Include(n => n.Kupon)
             .Include(n => n.Recenzija)
             .Include(n => n.Stavke).ThenInclude(s => s.Artikal)
             .Include(n => n.Stavke).ThenInclude(s => s.Usluge).ThenInclude(u => u.Usluga)
@@ -374,6 +415,9 @@ public class NarudzbaService : INarudzbaService
             NacinPredaje = detalj.NacinPredaje,
             NacinPredajeNaziv = detalj.NacinPredajeNaziv,
             UkupnaCijena = detalj.UkupnaCijena,
+            PopustIznos = detalj.PopustIznos,
+            UkupnoZaPlatiti = detalj.UkupnoZaPlatiti,
+            KuponKod = detalj.KuponKod,
             Napomena = detalj.Napomena,
             AdresaPreuzimanja = detalj.AdresaPreuzimanja,
             RokZavrsetka = detalj.RokZavrsetka,
@@ -736,6 +780,7 @@ public class NarudzbaService : INarudzbaService
         return await _context.Narudzbe
             .AsNoTracking()
             .Include(n => n.Korisnik)
+            .Include(n => n.Kupon)
             .Include(n => n.Status)
             .Include(n => n.Recenzija)
             .Include(n => n.Stavke).ThenInclude(s => s.Artikal)
@@ -758,6 +803,9 @@ public class NarudzbaService : INarudzbaService
             NacinPredaje = narudzba.Nacin_Predaje,
             NacinPredajeNaziv = NacinPredajeNazivi.ZaPrikaz(narudzba.Nacin_Predaje),
             UkupnaCijena = narudzba.Ukupna_Cijena,
+            PopustIznos = narudzba.Popust_Iznos,
+            UkupnoZaPlatiti = narudzba.Ukupna_Cijena - narudzba.Popust_Iznos,
+            KuponKod = narudzba.Kupon?.Kod,
             Napomena = narudzba.Napomena,
             AdresaPreuzimanja = adresa,
             RokZavrsetka = narudzba.Rok_Zavrsetka,

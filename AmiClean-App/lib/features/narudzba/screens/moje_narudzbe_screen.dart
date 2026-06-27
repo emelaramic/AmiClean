@@ -225,12 +225,31 @@ class _NarudzbaKartica extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    CijenaDisplay.km(narudzba.ukupnaCijena),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (narudzba.imaPopust) ...[
+                        Text(
+                          CijenaDisplay.km(narudzba.ukupnaCijena),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            decoration: TextDecoration.lineThrough,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                      ],
+                      Text(
+                        CijenaDisplay.km(
+                          narudzba.imaPopust
+                              ? narudzba.ukupnoZaPlatiti
+                              : narudzba.ukupnaCijena,
+                        ),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                   const Icon(Icons.chevron_right),
                 ],

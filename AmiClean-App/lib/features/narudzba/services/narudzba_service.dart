@@ -129,6 +129,7 @@ class NarudzbaService {
     required List<CartStavka> stavke,
     String? adresa,
     String? napomena,
+    String? kuponKod,
   }) async {
     final payload = await _apiClient.post(
       ApiConfig.kreirajNarudzbuUri,
@@ -137,6 +138,8 @@ class NarudzbaService {
         'nacinPredaje': nacinPredaje.apiVrijednost,
         'adresa': adresa?.trim(),
         'napomena': napomena?.trim(),
+        if (kuponKod != null && kuponKod.trim().isNotEmpty)
+          'kuponKod': kuponKod.trim(),
         'stavke': stavke
             .map(
               (s) => {

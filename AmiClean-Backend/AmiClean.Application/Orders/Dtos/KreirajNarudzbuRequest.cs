@@ -6,6 +6,7 @@ public class KreirajNarudzbuRequest
     public string NacinPredaje { get; set; } = null!;
     public string? Adresa { get; set; }
     public string? Napomena { get; set; }
+    public string? KuponKod { get; set; }
     public List<KreirajStavkuRequest> Stavke { get; set; } = [];
 }
 
@@ -23,6 +24,9 @@ public class NarudzbaKreiranaDto
     public string StatusNaziv { get; set; } = null!;
     public string NacinPredaje { get; set; } = null!;
     public decimal UkupnaCijena { get; set; }
+    public decimal PopustIznos { get; set; }
+    public decimal UkupnoZaPlatiti { get; set; }
+    public string? KuponKod { get; set; }
     public DateTime DatumKreiranja { get; set; }
     public string Poruka { get; set; } = null!;
 }

@@ -8,6 +8,9 @@ class NarudzbaPregled {
     required this.nacinPredaje,
     required this.nacinPredajeNaziv,
     required this.ukupnaCijena,
+    required this.popustIznos,
+    required this.ukupnoZaPlatiti,
+    this.kuponKod,
     required this.brojStavki,
     required this.mozeSeRecenzirati,
   });
@@ -18,17 +21,28 @@ class NarudzbaPregled {
   final String nacinPredaje;
   final String nacinPredajeNaziv;
   final double ukupnaCijena;
+  final double popustIznos;
+  final double ukupnoZaPlatiti;
+  final String? kuponKod;
   final int brojStavki;
   final bool mozeSeRecenzirati;
 
+  bool get imaPopust => popustIznos > 0;
+
   factory NarudzbaPregled.fromJson(Map<String, dynamic> json) {
+    final ukupna = (json['ukupnaCijena'] as num).toDouble();
+    final popust = (json['popustIznos'] as num?)?.toDouble() ?? 0;
     return NarudzbaPregled(
       id: json['id'] as int,
       datumKreiranja: DateTime.parse(json['datumKreiranja'] as String),
       statusNaziv: json['statusNaziv'] as String,
       nacinPredaje: json['nacinPredaje'] as String,
       nacinPredajeNaziv: json['nacinPredajeNaziv'] as String,
-      ukupnaCijena: (json['ukupnaCijena'] as num).toDouble(),
+      ukupnaCijena: ukupna,
+      popustIznos: popust,
+      ukupnoZaPlatiti:
+          (json['ukupnoZaPlatiti'] as num?)?.toDouble() ?? ukupna - popust,
+      kuponKod: json['kuponKod'] as String?,
       brojStavki: json['brojStavki'] as int,
       mozeSeRecenzirati: json['mozeSeRecenzirati'] as bool? ?? false,
     );
@@ -43,6 +57,9 @@ class NarudzbaDetalj {
     required this.nacinPredaje,
     required this.nacinPredajeNaziv,
     required this.ukupnaCijena,
+    required this.popustIznos,
+    required this.ukupnoZaPlatiti,
+    this.kuponKod,
     this.napomena,
     this.adresaPreuzimanja,
     this.rokZavrsetka,
@@ -58,6 +75,9 @@ class NarudzbaDetalj {
   final String nacinPredaje;
   final String nacinPredajeNaziv;
   final double ukupnaCijena;
+  final double popustIznos;
+  final double ukupnoZaPlatiti;
+  final String? kuponKod;
   final String? napomena;
   final String? adresaPreuzimanja;
   final DateTime? rokZavrsetka;
@@ -66,16 +86,24 @@ class NarudzbaDetalj {
   final bool mozeSeRecenzirati;
   final Recenzija? recenzija;
 
+  bool get imaPopust => popustIznos > 0;
+
   factory NarudzbaDetalj.fromJson(Map<String, dynamic> json) {
     final stavkeJson = json['stavke'] as List<dynamic>? ?? [];
     final recenzijaJson = json['recenzija'] as Map<String, dynamic>?;
+    final ukupna = (json['ukupnaCijena'] as num).toDouble();
+    final popust = (json['popustIznos'] as num?)?.toDouble() ?? 0;
     return NarudzbaDetalj(
       id: json['id'] as int,
       datumKreiranja: DateTime.parse(json['datumKreiranja'] as String),
       statusNaziv: json['statusNaziv'] as String,
       nacinPredaje: json['nacinPredaje'] as String,
       nacinPredajeNaziv: json['nacinPredajeNaziv'] as String,
-      ukupnaCijena: (json['ukupnaCijena'] as num).toDouble(),
+      ukupnaCijena: ukupna,
+      popustIznos: popust,
+      ukupnoZaPlatiti:
+          (json['ukupnoZaPlatiti'] as num?)?.toDouble() ?? ukupna - popust,
+      kuponKod: json['kuponKod'] as String?,
       napomena: json['napomena'] as String?,
       adresaPreuzimanja: json['adresaPreuzimanja'] as String?,
       rokZavrsetka: json['rokZavrsetka'] == null

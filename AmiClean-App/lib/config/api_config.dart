@@ -31,6 +31,12 @@ class ApiConfig {
   static String get getKatalogUri => '$baseUrl/api/Catalog/GetKatalog';
   static String get kreirajNarudzbuUri => '$baseUrl/api/Narudzba/KreirajNarudzbu';
 
+  static String provjeriKuponUri({
+    required String kod,
+    required double ukupnaCijena,
+  }) =>
+      '$baseUrl/api/Kupon/Provjeri?kod=${Uri.encodeComponent(kod.trim())}&ukupnaCijena=$ukupnaCijena';
+
   static String getMojeNarudzbeUri(int korisnikId) =>
       '$baseUrl/api/Narudzba/GetMojeNarudzbe?korisnikId=$korisnikId';
 

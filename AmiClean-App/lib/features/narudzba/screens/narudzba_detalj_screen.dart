@@ -222,15 +222,41 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
         const SizedBox(height: 8),
         ...n.stavke.map(_buildStavka),
         const Divider(height: 32),
+        if (n.imaPopust) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Međuzbroj', style: Theme.of(context).textTheme.bodyLarge),
+              Text(CijenaDisplay.km(n.ukupnaCijena)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Popust${n.kuponKod != null ? ' (${n.kuponKod})' : ''}',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              Text(
+                '-${CijenaDisplay.km(n.popustIznos)}',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Ukupno',
+              n.imaPopust ? 'Ukupno za platiti' : 'Ukupno',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             Text(
-              CijenaDisplay.km(n.ukupnaCijena),
+              CijenaDisplay.km(
+                n.imaPopust ? n.ukupnoZaPlatiti : n.ukupnaCijena,
+              ),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,

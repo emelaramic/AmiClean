@@ -10,6 +10,9 @@ public class NarudzbaPregledDto
     public string NacinPredaje { get; set; } = null!;
     public string NacinPredajeNaziv { get; set; } = null!;
     public decimal UkupnaCijena { get; set; }
+    public decimal PopustIznos { get; set; }
+    public decimal UkupnoZaPlatiti { get; set; }
+    public string? KuponKod { get; set; }
     public int BrojStavki { get; set; }
     public bool MozeSeRecenzirati { get; set; }
 }
@@ -22,6 +25,9 @@ public class NarudzbaDetaljDto
     public string NacinPredaje { get; set; } = null!;
     public string NacinPredajeNaziv { get; set; } = null!;
     public decimal UkupnaCijena { get; set; }
+    public decimal PopustIznos { get; set; }
+    public decimal UkupnoZaPlatiti { get; set; }
+    public string? KuponKod { get; set; }
     public string? Napomena { get; set; }
     public string? AdresaPreuzimanja { get; set; }
     public DateTime? RokZavrsetka { get; set; }

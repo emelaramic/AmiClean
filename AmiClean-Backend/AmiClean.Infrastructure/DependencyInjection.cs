@@ -1,11 +1,13 @@
 using AmiClean.Application.Auth.Interfaces;
 using AmiClean.Application.Catalog.Interfaces;
+using AmiClean.Application.Coupons.Interfaces;
 using AmiClean.Application.Notifications.Interfaces;
 using AmiClean.Application.Orders.Interfaces;
 using AmiClean.Application.Recommendations.Interfaces;
 using AmiClean.Application.Reviews.Interfaces;
 using AmiClean.Infrastructure.Auth;
 using AmiClean.Infrastructure.Catalog;
+using AmiClean.Infrastructure.Coupons;
 using AmiClean.Infrastructure.Notifications;
 using AmiClean.Infrastructure.Orders;
 using AmiClean.Infrastructure.Persistence;
@@ -28,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, Sha256PasswordHasher>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICatalogService, CatalogService>();
+        services.AddScoped<IKuponService, KuponService>();
         services.AddScoped<INarudzbaService, NarudzbaService>();
         services.AddScoped<IPreporukaService, PreporukaService>();
         services.AddScoped<INotifikacijaService, NotifikacijaService>();

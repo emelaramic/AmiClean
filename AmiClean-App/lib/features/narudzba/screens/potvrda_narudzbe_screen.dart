@@ -5,6 +5,8 @@ import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../../core/cart/cart_session.dart';
 import '../../auth/services/korisnik_service.dart';
+import '../../kuponi/models/kupon_provjera.dart';
+import '../../kuponi/services/kupon_service.dart';
 import '../models/nacin_predaje.dart';
 import '../services/narudzba_service.dart';
 
@@ -26,13 +28,17 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
   final _apiClient = ApiClient();
   late final _narudzbaService = NarudzbaService(apiClient: _apiClient);
   late final _korisnikService = KorisnikService(apiClient: _apiClient);
+  late final _kuponService = KuponService(apiClient: _apiClient);
   final _adresaController = TextEditingController();
   final _napomenaController = TextEditingController();
+  final _kuponController = TextEditingController();
 
   NacinPredaje _nacinPredaje = NacinPredaje.donosUCistionicu;
   bool _salje = false;
+  bool _provjeraKupona = false;
   bool _ucitavanjeProfila = true;
   String? _profilAdresa;
+  KuponProvjera? _primijenjeniKupon;
 
   @override
   void initState() {
@@ -44,6 +50,7 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
   void dispose() {
     _adresaController.dispose();
     _napomenaController.dispose();
+    _kuponController.dispose();
     _apiClient.dispose();
     super.dispose();
   }
@@ -98,6 +105,57 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
     return _adresaController.text.trim() == profil;
   }
 
+  double get _ukupnoBezPopusta => widget.cart.ukupno;
+
+  double get _popustIznos => _primijenjeniKupon?.popustIznos ?? 0;
+
+  double get _ukupnoZaPlatiti =>
+      _primijenjeniKupon?.ukupnoNakonPopusta ?? _ukupnoBezPopusta;
+
+  void _ponistiKupon() {
+    setState(() {
+      _primijenjeniKupon = null;
+      _kuponController.clear();
+    });
+  }
+
+  Future<void> _primijeniKupon() async {
+    final kod = _kuponController.text.trim();
+    if (kod.isEmpty) {
+      _prikaziGresku('Unesite kod kupona.');
+      return;
+    }
+
+    setState(() => _provjeraKupona = true);
+
+    try {
+      final rezultat = await _kuponService.provjeri(
+        kod: kod,
+        ukupnaCijena: _ukupnoBezPopusta,
+      );
+
+      if (!mounted) return;
+
+      if (!rezultat.vazeci) {
+        setState(() {
+          _primijenjeniKupon = null;
+          _provjeraKupona = false;
+        });
+        _prikaziGresku(rezultat.poruka ?? 'Kupon nije važeći.');
+        return;
+      }
+
+      setState(() {
+        _primijenjeniKupon = rezultat;
+        _provjeraKupona = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _provjeraKupona = false);
+      _prikaziGresku('Provjera kupona nije uspjela.');
+    }
+  }
+
   Future<void> _potvrdiNarudzbu() async {
     if (widget.cart.isEmpty) {
       _prikaziGresku('Narudžba je prazna.');
@@ -123,6 +181,7 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
         napomena: _napomenaController.text.trim().isEmpty
             ? null
             : _napomenaController.text.trim(),
+        kuponKod: _primijenjeniKupon?.kod,
       );
 
       if (!mounted) return;
@@ -140,7 +199,16 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
             children: [
               Text('Broj narudžbe: #${rezultat.id}'),
               Text('Status: ${rezultat.statusNaziv}'),
-              Text('Ukupno: ${_formatKm(rezultat.ukupnaCijena)}'),
+              if (rezultat.popustIznos > 0) ...[
+                Text('Međuzbroj: ${_formatKm(rezultat.ukupnaCijena)}'),
+                Text(
+                  'Popust (${rezultat.kuponKod}): -${_formatKm(rezultat.popustIznos)}',
+                ),
+              ],
+              Text(
+                'Ukupno: ${_formatKm(rezultat.ukupnoZaPlatiti)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               Text(rezultat.poruka),
             ],
@@ -236,12 +304,76 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
             enabled: !_salje,
           ),
           const SizedBox(height: 24),
+          Text(
+            'Kupon za popust',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _kuponController,
+                  onChanged: (_) {
+                    if (_primijenjeniKupon != null) {
+                      setState(() => _primijenjeniKupon = null);
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Kod kupona (opcionalno)',
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  enabled: !_salje && !_provjeraKupona,
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonal(
+                onPressed: _salje || _provjeraKupona ? null : _primijeniKupon,
+                child: Text(_provjeraKupona ? '...' : 'Primijeni'),
+              ),
+            ],
+          ),
+          if (_primijenjeniKupon != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _primijenjeniKupon!.poruka ?? 'Kupon primijenjen.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _salje ? null : _ponistiKupon,
+                  child: const Text('Ukloni'),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 24),
+          _buildCijenaRed('Međuzbroj', _ukupnoBezPopusta),
+          if (_popustIznos > 0) ...[
+            const SizedBox(height: 8),
+            _buildCijenaRed(
+              'Popust',
+              -_popustIznos,
+              boja: Theme.of(context).colorScheme.error,
+            ),
+          ],
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Ukupno'),
               Text(
-                _formatKm(widget.cart.ukupno),
+                'Ukupno za platiti',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                _formatKm(_ukupnoZaPlatiti),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -259,9 +391,23 @@ class _PotvrdaNarudzbeScreenState extends State<PotvrdaNarudzbeScreen> {
   }
 
   String _formatKm(double value) {
-    if (value == value.roundToDouble()) {
-      return '${value.toInt()} KM';
-    }
-    return '${value.toStringAsFixed(2)} KM';
+    final apsolutna = value.abs();
+    final tekst = apsolutna == apsolutna.roundToDouble()
+        ? '${apsolutna.toInt()} KM'
+        : '${apsolutna.toStringAsFixed(2)} KM';
+    return value < 0 ? '-$tekst' : tekst;
+  }
+
+  Widget _buildCijenaRed(String label, double iznos, {Color? boja}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        Text(
+          _formatKm(iznos),
+          style: boja != null ? TextStyle(color: boja) : null,
+        ),
+      ],
+    );
   }
 }
