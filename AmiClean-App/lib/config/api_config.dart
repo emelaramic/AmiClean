@@ -121,4 +121,10 @@ class ApiConfig {
 
   static String getDostaveZaRadnikaUri({required int zaposlenikId}) =>
       '$baseUrl/api/Narudzba/GetDostaveZaRadnika?zaposlenikId=$zaposlenikId';
+
+  static String getDetaljDostaveZaRadnikaUri({
+    required int narudzbaId,
+    required int zaposlenikId,
+  }) =>
+      '$baseUrl/api/Narudzba/GetDetaljDostaveZaRadnika?narudzbaId=$narudzbaId&zaposlenikId=$zaposlenikId';
 }

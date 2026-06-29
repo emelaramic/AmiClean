@@ -7,6 +7,7 @@ import '../../qr/screens/stavka_oznaka_skeniraj_screen.dart';
 import '../models/radnik_dostava.dart';
 import '../services/radnik_service.dart';
 import '../widgets/radnik_dostava_kartica.dart';
+import 'radnik_dostava_detalj_screen.dart';
 
 /// Početni ekran radnika — lista dostava i skeniranje QR oznaka.
 class RadnikHomeScreen extends StatefulWidget {
@@ -78,6 +79,18 @@ class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
       ),
     );
     if (mounted) await _ucitajDostave();
+  }
+
+  Future<void> _otvoriDetalj(int narudzbaId) async {
+    final promijenjeno = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => RadnikDostavaDetaljScreen(
+          narudzbaId: narudzbaId,
+          zaposlenikId: widget.session.user!.id,
+        ),
+      ),
+    );
+    if (promijenjeno == true && mounted) await _ucitajDostave();
   }
 
   @override
@@ -172,6 +185,7 @@ class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
                           ..._dostave!.spremne.map(
                             (d) => RadnikDostavaKartica(
                               dostava: d,
+                              onDetalj: () => _otvoriDetalj(d.narudzbaId),
                               onSkeniraj: _otvoriSkeniranje,
                             ),
                           ),
@@ -187,6 +201,7 @@ class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
                           ..._dostave!.uToku.map(
                             (d) => RadnikDostavaKartica(
                               dostava: d,
+                              onDetalj: () => _otvoriDetalj(d.narudzbaId),
                               onSkeniraj: _otvoriSkeniranje,
                             ),
                           ),

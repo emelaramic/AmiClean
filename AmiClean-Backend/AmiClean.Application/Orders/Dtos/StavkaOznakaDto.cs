@@ -67,3 +67,28 @@ public class RadnikDostaveListaDto
     public IReadOnlyList<RadnikDostavaPregledDto> Spremne { get; set; } = [];
     public IReadOnlyList<RadnikDostavaPregledDto> UToku { get; set; } = [];
 }
+
+public class RadnikDostavaStavkaDto
+{
+    public int StavkaId { get; set; }
+    public string ArtikalNaziv { get; set; } = null!;
+    public string? BrojOznake { get; set; }
+    public decimal Kolicina { get; set; }
+}
+
+public class RadnikDostavaDetaljDto
+{
+    public int NarudzbaId { get; set; }
+    public string KorisnikPunoIme { get; set; } = null!;
+    public string? KorisnikTelefon { get; set; }
+    public string AdresaDostave { get; set; } = null!;
+    public string LogistikaStatusNaziv { get; set; } = null!;
+    public int BrojStavki { get; set; }
+    public DateTime DatumPrijema { get; set; }
+    public DateTime? RokZavrsetka { get; set; }
+    public string? VozacPunoIme { get; set; }
+    public bool JeMojaDostava { get; set; }
+    public bool MozePokrenuti { get; set; }
+    public string? Napomena { get; set; }
+    public IReadOnlyList<RadnikDostavaStavkaDto> Stavke { get; set; } = [];
+}

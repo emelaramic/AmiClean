@@ -61,4 +61,9 @@ public interface INarudzbaService
     Task<RadnikDostaveListaDto> GetDostaveZaRadnikaAsync(
         int zaposlenikId,
         CancellationToken cancellationToken = default);
+
+    Task<RadnikDostavaDetaljDto> GetDetaljDostaveZaRadnikaAsync(
+        int narudzbaId,
+        int zaposlenikId,
+        CancellationToken cancellationToken = default);
 }

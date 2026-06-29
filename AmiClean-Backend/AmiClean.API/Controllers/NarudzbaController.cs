@@ -216,6 +216,23 @@ public class NarudzbaController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<ActionResult<RadnikDostavaDetaljDto>> GetDetaljDostaveZaRadnika(
+        [FromQuery] int narudzbaId,
+        [FromQuery] int zaposlenikId)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.GetDetaljDostaveZaRadnikaAsync(
+                narudzbaId,
+                zaposlenikId));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<Narudzba>>> GetNarudzbe()
     {
         return await _context.Narudzbe

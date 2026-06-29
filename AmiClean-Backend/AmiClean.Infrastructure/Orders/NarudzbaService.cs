@@ -1010,6 +1010,92 @@ public class NarudzbaService : INarudzbaService
         };
     }
 
+    public async Task<RadnikDostavaDetaljDto> GetDetaljDostaveZaRadnikaAsync(
+        int narudzbaId,
+        int zaposlenikId,
+        CancellationToken cancellationToken = default)
+    {
+        if (narudzbaId <= 0 || zaposlenikId <= 0)
+            throw new NarudzbaValidationException("Identifikatori nisu ispravni.");
+
+        var logistika = await UcitajAktivnuDostavuZaRadnikaAsync(
+            narudzbaId,
+            zaposlenikId,
+            cancellationToken);
+
+        var pregled = MapRadnikDostava(logistika, zaposlenikId);
+        var narudzba = logistika.Narudzba;
+
+        return new RadnikDostavaDetaljDto
+        {
+            NarudzbaId = pregled.NarudzbaId,
+            KorisnikPunoIme = pregled.KorisnikPunoIme,
+            KorisnikTelefon = pregled.KorisnikTelefon,
+            AdresaDostave = pregled.AdresaDostave,
+            LogistikaStatusNaziv = pregled.LogistikaStatusNaziv,
+            BrojStavki = pregled.BrojStavki,
+            DatumPrijema = pregled.DatumPrijema,
+            RokZavrsetka = pregled.RokZavrsetka,
+            VozacPunoIme = pregled.VozacPunoIme,
+            JeMojaDostava = pregled.JeMojaDostava,
+            MozePokrenuti = pregled.MozePokrenuti,
+            Napomena = narudzba.Napomena,
+            Stavke = narudzba.Stavke
+                .OrderBy(s => s.ID_Stavke)
+                .Select(s => new RadnikDostavaStavkaDto
+                {
+                    StavkaId = s.ID_Stavke,
+                    ArtikalNaziv = s.Artikal.Naziv,
+                    BrojOznake = s.Broj_Oznake,
+                    Kolicina = s.Kolicina,
+                })
+                .ToList(),
+        };
+    }
+
+    private async Task<Logistika> UcitajAktivnuDostavuZaRadnikaAsync(
+        int narudzbaId,
+        int zaposlenikId,
+        CancellationToken cancellationToken)
+    {
+        if (zaposlenikId <= 0)
+            throw new NarudzbaValidationException("ZaposlenikId nije ispravan.");
+
+        var zaposlenikPostoji = await _context.Zaposlenici
+            .AsNoTracking()
+            .AnyAsync(
+                z => z.ID_Zaposlenika == zaposlenikId && z.Aktivan,
+                cancellationToken);
+
+        if (!zaposlenikPostoji)
+            throw new NarudzbaValidationException("Zaposlenik nije pronađen.");
+
+        var logistika = await _context.Logistike
+            .AsNoTracking()
+            .Include(l => l.Status)
+            .Include(l => l.Vozac)
+            .Include(l => l.Narudzba).ThenInclude(n => n.Korisnik)
+            .Include(l => l.Narudzba).ThenInclude(n => n.Status)
+            .Include(l => l.Narudzba).ThenInclude(n => n.Stavke).ThenInclude(s => s.Artikal)
+            .FirstOrDefaultAsync(
+                l =>
+                    l.FK_Narudzba == narudzbaId &&
+                    l.Tip == LogistikaTipovi.Preuzimanje &&
+                    (l.Status.Naziv == LogistikaStatusi.Zakazano ||
+                     l.Status.Naziv == LogistikaStatusi.UToku) &&
+                    l.Narudzba.Nacin_Predaje == NacinPredajeVrijednosti.PreuzimanjeIDostava &&
+                    l.Narudzba.Status.Naziv == NarudzbaStatusi.Gotova,
+                cancellationToken);
+
+        if (logistika == null)
+        {
+            throw new NarudzbaValidationException(
+                "Dostava nije pronađena ili narudžba nije spremna za dostavu.");
+        }
+
+        return logistika;
+    }
+
     private static RadnikDostavaPregledDto MapRadnikDostava(Logistika logistika, int zaposlenikId)
     {
         var narudzba = logistika.Narudzba;

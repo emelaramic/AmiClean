@@ -7,10 +7,12 @@ class RadnikDostavaKartica extends StatelessWidget {
   const RadnikDostavaKartica({
     super.key,
     required this.dostava,
+    this.onDetalj,
     this.onSkeniraj,
   });
 
   final RadnikDostava dostava;
+  final VoidCallback? onDetalj;
   final VoidCallback? onSkeniraj;
 
   @override
@@ -27,11 +29,14 @@ class RadnikDostavaKartica extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onDetalj,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Row(
               children: [
                 Expanded(
@@ -123,8 +128,22 @@ class RadnikDostavaKartica extends StatelessWidget {
                 ),
               ),
             ],
+            if (onDetalj != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'Detalji i oznake →',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
+      ),
       ),
     );
   }
