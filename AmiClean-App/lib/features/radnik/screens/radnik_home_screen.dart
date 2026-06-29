@@ -21,24 +21,42 @@ class RadnikHomeScreen extends StatefulWidget {
 
 class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
   final _apiClient = ApiClient();
+  final _pretragaController = TextEditingController();
   late final RadnikService _radnikService =
       RadnikService(apiClient: _apiClient);
 
   RadnikDostaveLista? _dostave;
   bool _loading = true;
   String? _greska;
+  String _upitPretrage = '';
 
   @override
   void initState() {
     super.initState();
+    _pretragaController.addListener(() {
+      setState(() => _upitPretrage = _pretragaController.text);
+    });
     _ucitajDostave();
   }
 
   @override
   void dispose() {
+    _pretragaController.dispose();
     _apiClient.dispose();
     super.dispose();
   }
+
+  bool _odgovaraPretrazi(RadnikDostava dostava) {
+    final upit = _upitPretrage.trim().toLowerCase();
+    if (upit.isEmpty) return true;
+    return dostava.korisnikPunoIme.toLowerCase().contains(upit);
+  }
+
+  List<RadnikDostava> _filtriraneSpremne() =>
+      _dostave?.spremne.where(_odgovaraPretrazi).toList() ?? const [];
+
+  List<RadnikDostava> _filtriraneUToku() =>
+      _dostave?.uToku.where(_odgovaraPretrazi).toList() ?? const [];
 
   Future<void> _ucitajDostave() async {
     setState(() {
@@ -165,6 +183,29 @@ class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      TextField(
+                        controller: _pretragaController,
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: 'Pretraži po imenu korisnika',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _upitPretrage.trim().isEmpty
+                              ? null
+                              : IconButton(
+                                  onPressed: () {
+                                    _pretragaController.clear();
+                                  },
+                                  tooltip: 'Obriši pretragu',
+                                  icon: const Icon(Icons.clear),
+                                ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       if (_loading)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32),
@@ -175,37 +216,57 @@ class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
                       else if (_dostave == null || _dostave!.jePrazno)
                         _buildPrazno(theme)
                       else ...[
-                        if (_dostave!.spremne.isNotEmpty) ...[
-                          _buildSekcijaNaslov(
-                            theme,
-                            'Spremne za dostavu',
-                            _dostave!.spremne.length,
-                          ),
-                          const SizedBox(height: 8),
-                          ..._dostave!.spremne.map(
-                            (d) => RadnikDostavaKartica(
-                              dostava: d,
-                              onDetalj: () => _otvoriDetalj(d.narudzbaId),
-                              onSkeniraj: _otvoriSkeniranje,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                        if (_dostave!.uToku.isNotEmpty) ...[
-                          _buildSekcijaNaslov(
-                            theme,
-                            'U toku',
-                            _dostave!.uToku.length,
-                          ),
-                          const SizedBox(height: 8),
-                          ..._dostave!.uToku.map(
-                            (d) => RadnikDostavaKartica(
-                              dostava: d,
-                              onDetalj: () => _otvoriDetalj(d.narudzbaId),
-                              onSkeniraj: _otvoriSkeniranje,
-                            ),
-                          ),
-                        ],
+                        Builder(
+                          builder: (context) {
+                            final spremne = _filtriraneSpremne();
+                            final uToku = _filtriraneUToku();
+                            final imaRezultata =
+                                spremne.isNotEmpty || uToku.isNotEmpty;
+
+                            if (!imaRezultata) {
+                              return _buildNemaRezultataPretrage(theme);
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (spremne.isNotEmpty) ...[
+                                  _buildSekcijaNaslov(
+                                    theme,
+                                    'Spremne za dostavu',
+                                    spremne.length,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...spremne.map(
+                                    (d) => RadnikDostavaKartica(
+                                      dostava: d,
+                                      onDetalj: () =>
+                                          _otvoriDetalj(d.narudzbaId),
+                                      onSkeniraj: _otvoriSkeniranje,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                                if (uToku.isNotEmpty) ...[
+                                  _buildSekcijaNaslov(
+                                    theme,
+                                    'U toku',
+                                    uToku.length,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...uToku.map(
+                                    (d) => RadnikDostavaKartica(
+                                      dostava: d,
+                                      onDetalj: () =>
+                                          _otvoriDetalj(d.narudzbaId),
+                                      onSkeniraj: _otvoriSkeniranje,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
                       ],
                     ],
                   ),
@@ -264,6 +325,44 @@ class _RadnikHomeScreenState extends State<RadnikHomeScreen> {
             TextButton(
               onPressed: _ucitajDostave,
               child: const Text('Pokušaj ponovno'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNemaRezultataPretrage(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Icon(
+              Icons.person_search_outlined,
+              size: 48,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Nema dostava za „${_upitPretrage.trim()}”',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Probaj ime ili prezime korisnika (npr. Amra, Emela).',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
