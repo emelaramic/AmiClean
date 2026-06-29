@@ -65,14 +65,28 @@ public class AuthService : IAuthService
         if (!_passwordHasher.Verify(request.Lozinka, zaposlenik.Lozinka_Hash))
             return null;
 
+        var appUloga = MapZaposlenikNaAppUlogu(zaposlenik.Uloga);
+        if (appUloga is null)
+            return null;
+
         return new PrijavaResponse
         {
             Id = zaposlenik.ID_Zaposlenika,
             Ime = zaposlenik.Ime,
             Prezime = zaposlenik.Prezime,
-            Uloga = AuthUloge.Admin,
+            Uloga = appUloga,
             Korisnicko_Ime = zaposlenik.Korisnicko_Ime,
             Uloga_Zaposlenika = zaposlenik.Uloga,
+        };
+    }
+
+    private static string? MapZaposlenikNaAppUlogu(string ulogaUBazi)
+    {
+        return ulogaUBazi.Trim().ToLowerInvariant() switch
+        {
+            "administrator" or "admin" => AuthUloge.Admin,
+            "radnik" => AuthUloge.Radnik,
+            _ => null,
         };
     }
 }

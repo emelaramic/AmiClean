@@ -46,6 +46,7 @@ public class StavkaPregledDto
     public decimal CijenaJedinicna { get; set; }
     public decimal Ukupno { get; set; }
     public string? Napomena { get; set; }
+    public string? BrojOznake { get; set; }
     public IReadOnlyList<StavkaUslugaPregledDto> Usluge { get; set; } = [];
 }
 

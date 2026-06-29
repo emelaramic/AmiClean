@@ -130,6 +130,7 @@ class StavkaPregled {
     required this.cijenaJedinicna,
     required this.ukupno,
     this.napomena,
+    this.brojOznake,
     required this.usluge,
   });
 
@@ -140,7 +141,11 @@ class StavkaPregled {
   final double cijenaJedinicna;
   final double ukupno;
   final String? napomena;
+  final String? brojOznake;
   final List<StavkaUslugaPregled> usluge;
+
+  bool get imaBrojOznake =>
+      brojOznake != null && brojOznake!.trim().isNotEmpty;
 
   factory StavkaPregled.fromJson(Map<String, dynamic> json) {
     final uslugeJson = json['usluge'] as List<dynamic>? ?? [];
@@ -152,6 +157,7 @@ class StavkaPregled {
       cijenaJedinicna: (json['cijenaJedinicna'] as num).toDouble(),
       ukupno: (json['ukupno'] as num).toDouble(),
       napomena: json['napomena'] as String?,
+      brojOznake: json['brojOznake'] as String?,
       usluge: uslugeJson
           .map((e) => StavkaUslugaPregled.fromJson(e as Map<String, dynamic>))
           .toList(),

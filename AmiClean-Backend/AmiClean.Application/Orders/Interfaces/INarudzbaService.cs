@@ -44,4 +44,17 @@ public interface INarudzbaService
     Task<NarudzbaStatusPromjenaDto> OtkaziNarudzbuAsync(
         OtkaziNarudzbuRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<StavkaOznakaInfoDto> GetInfoPoOznaciAsync(
+        string unos,
+        int? korisnikId = null,
+        CancellationToken cancellationToken = default);
+
+    Task<RadnikOznakaRezultatDto> RadnikPokreniDostavuAsync(
+        RadnikOznakaRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<KorisnikOznakaRezultatDto> KorisnikPotvrdiPreuzimanjeAsync(
+        KorisnikOznakaRequest request,
+        CancellationToken cancellationToken = default);
 }

@@ -473,8 +473,20 @@ public class NarudzbaService : INarudzbaService
         narudzba.FK_Status = statusPrimljena.ID_Statusa;
         narudzba.FK_Primio_Zaposlenik = zaposlenik.ID_Zaposlenika;
 
-        foreach (var stavka in narudzba.Stavke)
+        var redniBrojStavke = 1;
+        foreach (var stavka in narudzba.Stavke.OrderBy(s => s.ID_Stavke))
+        {
             stavka.FK_Status = statusStavkePrimljena.ID_Statusa;
+
+            if (string.IsNullOrWhiteSpace(stavka.Broj_Oznake))
+            {
+                stavka.Broj_Oznake = BrojOznakeGenerator.Generisi(
+                    narudzba.ID_Narudzbe,
+                    redniBrojStavke);
+            }
+
+            redniBrojStavke++;
+        }
 
         _notifikacijaService.PlanirajStatusObavijest(
             narudzba.FK_Korisnik,
@@ -719,6 +731,341 @@ public class NarudzbaService : INarudzbaService
         };
     }
 
+    public async Task<StavkaOznakaInfoDto> GetInfoPoOznaciAsync(
+        string unos,
+        int? korisnikId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var brojOznake = ParsirajBrojOznake(unos);
+        var stavka = await UcitajStavkuPoOznaciAsync(brojOznake, cancellationToken)
+            ?? throw new NarudzbaValidationException("Oznaka nije pronađena.");
+
+        if (korisnikId is > 0 && stavka.Narudzba.FK_Korisnik != korisnikId)
+        {
+            throw new NarudzbaValidationException("Ova oznaka ne pripada vašoj narudžbi.");
+        }
+
+        return MapStavkaOznakaInfo(stavka, korisnikId);
+    }
+
+    public async Task<RadnikOznakaRezultatDto> RadnikPokreniDostavuAsync(
+        RadnikOznakaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.ZaposlenikId <= 0)
+            throw new NarudzbaValidationException("ZaposlenikId nije ispravan.");
+
+        var brojOznake = ParsirajBrojOznake(request.Unos);
+
+        var zaposlenik = await _context.Zaposlenici
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                z => z.ID_Zaposlenika == request.ZaposlenikId && z.Aktivan,
+                cancellationToken)
+            ?? throw new NarudzbaValidationException("Zaposlenik nije pronađen.");
+
+        var stavka = await UcitajStavkuPoOznaciAsync(brojOznake, cancellationToken, zaIzmjenu: true)
+            ?? throw new NarudzbaValidationException("Oznaka nije pronađena.");
+
+        var narudzba = stavka.Narudzba;
+        var statusNarudzbe = narudzba.Status.Naziv;
+
+        if (statusNarudzbe != NarudzbaStatusi.Gotova)
+        {
+            throw new NarudzbaValidationException(
+                $"Narudžba mora biti u statusu '{NarudzbaStatusi.Gotova}'. Trenutni status: '{statusNarudzbe}'.");
+        }
+
+        if (narudzba.Nacin_Predaje == NacinPredajeVrijednosti.PreuzimanjeIDostava)
+        {
+            var logistika = narudzba.Logistike
+                .FirstOrDefault(l => l.Tip == LogistikaTipovi.Preuzimanje)
+                ?? throw new NarudzbaValidationException("Logistika dostave nije pronađena.");
+
+            var logistikaStatus = logistika.Status.Naziv;
+
+            if (logistikaStatus == LogistikaStatusi.Zavrseno)
+            {
+                throw new NarudzbaValidationException("Dostava za ovu narudžbu je već završena.");
+            }
+
+            if (logistikaStatus == LogistikaStatusi.Otkazano)
+            {
+                throw new NarudzbaValidationException("Dostava za ovu narudžbu je otkazana.");
+            }
+
+            var dostavaPokrenuta = false;
+            string poruka;
+
+            if (logistikaStatus == LogistikaStatusi.Zakazano)
+            {
+                var statusUToku = await _context.StatusiLogistike
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.Naziv == LogistikaStatusi.UToku, cancellationToken)
+                    ?? throw new NarudzbaValidationException(
+                        $"Status logistike '{LogistikaStatusi.UToku}' nije definisan u bazi.");
+
+                logistika.FK_Status = statusUToku.ID_Statusa;
+                logistika.FK_Vozac = zaposlenik.ID_Zaposlenika;
+                logistika.Stvarno_Vrijeme = DateTime.Now;
+
+                _notifikacijaService.PlanirajDostavuPokrenutu(
+                    narudzba.FK_Korisnik,
+                    narudzba.ID_Narudzbe);
+
+                await _context.SaveChangesAsync(cancellationToken);
+
+                dostavaPokrenuta = true;
+                poruka =
+                    $"Dostava narudžbe #{narudzba.ID_Narudzbe} je pokrenuta. Adresa: {logistika.Adresa}.";
+            }
+            else
+            {
+                poruka = logistikaStatus == LogistikaStatusi.UToku
+                    ? $"Dostava narudžbe #{narudzba.ID_Narudzbe} je već u toku."
+                    : $"Logistika narudžbe #{narudzba.ID_Narudzbe} je u statusu '{logistikaStatus}'.";
+            }
+
+            return new RadnikOznakaRezultatDto
+            {
+                NarudzbaId = narudzba.ID_Narudzbe,
+                StatusNarudzbe = statusNarudzbe,
+                LogistikaStatusNaziv = dostavaPokrenuta
+                    ? LogistikaStatusi.UToku
+                    : logistika.Status.Naziv,
+                DostavaPokrenuta = dostavaPokrenuta,
+                Poruka = poruka,
+            };
+        }
+
+        return new RadnikOznakaRezultatDto
+        {
+            NarudzbaId = narudzba.ID_Narudzbe,
+            StatusNarudzbe = statusNarudzbe,
+            LogistikaStatusNaziv = null,
+            DostavaPokrenuta = false,
+            Poruka =
+                $"Stavka '{stavka.Artikal.Naziv}' potvrđena. Narudžba #{narudzba.ID_Narudzbe} čeka preuzimanje korisnika u radnji.",
+        };
+    }
+
+    public async Task<KorisnikOznakaRezultatDto> KorisnikPotvrdiPreuzimanjeAsync(
+        KorisnikOznakaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.KorisnikId <= 0)
+            throw new NarudzbaValidationException("KorisnikId nije ispravan.");
+
+        var brojOznake = ParsirajBrojOznake(request.Unos);
+
+        var korisnik = await _context.Korisnici
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                k => k.ID_Korisnika == request.KorisnikId && k.Aktivan,
+                cancellationToken)
+            ?? throw new NarudzbaValidationException("Korisnik nije pronađen.");
+
+        var stavka = await UcitajStavkuPoOznaciAsync(brojOznake, cancellationToken, zaIzmjenu: true)
+            ?? throw new NarudzbaValidationException("Oznaka nije pronađena.");
+
+        var narudzba = stavka.Narudzba;
+
+        if (narudzba.FK_Korisnik != korisnik.ID_Korisnika)
+        {
+            throw new NarudzbaValidationException("Ova oznaka ne pripada vašoj narudžbi.");
+        }
+
+        var statusNarudzbe = narudzba.Status.Naziv;
+
+        if (statusNarudzbe == NarudzbaStatusi.Preuzeta)
+        {
+            throw new NarudzbaValidationException("Narudžba je već preuzeta.");
+        }
+
+        if (statusNarudzbe != NarudzbaStatusi.Gotova)
+        {
+            throw new NarudzbaValidationException(
+                $"Narudžba nije spremna za preuzimanje. Trenutni status: '{statusNarudzbe}'.");
+        }
+
+        var logistika = narudzba.Logistike
+            .FirstOrDefault(l => l.Tip == LogistikaTipovi.Preuzimanje);
+
+        if (logistika != null)
+        {
+            var logistikaStatus = logistika.Status.Naziv;
+
+            if (logistikaStatus == LogistikaStatusi.Zavrseno)
+            {
+                throw new NarudzbaValidationException("Preuzimanje za ovu narudžbu je već potvrđeno.");
+            }
+
+            if (logistikaStatus == LogistikaStatusi.Otkazano)
+            {
+                throw new NarudzbaValidationException("Dostava za ovu narudžbu je otkazana.");
+            }
+        }
+
+        var statusPreuzeta = await _context.StatusiNarudzbe
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Naziv == NarudzbaStatusi.Preuzeta, cancellationToken)
+            ?? throw new NarudzbaValidationException(
+                $"Status narudžbe '{NarudzbaStatusi.Preuzeta}' nije definisan u bazi.");
+
+        var statusStavkeIsporucena = await _context.StatusiStavke
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Naziv == StavkaStatusi.Isporucena, cancellationToken)
+            ?? throw new NarudzbaValidationException(
+                $"Status stavke '{StavkaStatusi.Isporucena}' nije definisan u bazi.");
+
+        narudzba.FK_Status = statusPreuzeta.ID_Statusa;
+
+        foreach (var stavkaNarudzbe in narudzba.Stavke)
+            stavkaNarudzbe.FK_Status = statusStavkeIsporucena.ID_Statusa;
+
+        string? logistikaStatusNaziv = null;
+
+        if (logistika != null)
+        {
+            var statusZavrseno = await _context.StatusiLogistike
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Naziv == LogistikaStatusi.Zavrseno, cancellationToken)
+                ?? throw new NarudzbaValidationException(
+                    $"Status logistike '{LogistikaStatusi.Zavrseno}' nije definisan u bazi.");
+
+            logistika.FK_Status = statusZavrseno.ID_Statusa;
+            logistika.Stvarno_Vrijeme ??= DateTime.Now;
+            logistikaStatusNaziv = LogistikaStatusi.Zavrseno;
+        }
+
+        _notifikacijaService.PlanirajStatusObavijest(
+            narudzba.FK_Korisnik,
+            narudzba.ID_Narudzbe,
+            NarudzbaStatusi.Preuzeta);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var poruka = logistika != null
+            ? $"Preuzimanje narudžbe #{narudzba.ID_Narudzbe} je potvrđeno. Hvala vam!"
+            : $"Preuzimanje u radnji za narudžbu #{narudzba.ID_Narudzbe} je potvrđeno. Hvala vam!";
+
+        return new KorisnikOznakaRezultatDto
+        {
+            NarudzbaId = narudzba.ID_Narudzbe,
+            StatusNarudzbe = NarudzbaStatusi.Preuzeta,
+            LogistikaStatusNaziv = logistikaStatusNaziv,
+            PreuzimanjePotvrdeno = true,
+            Poruka = poruka,
+        };
+    }
+
+    private static string ParsirajBrojOznake(string unos)
+    {
+        try
+        {
+            return BrojOznakeGenerator.ParsirajUnos(unos);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new NarudzbaValidationException(ex.Message);
+        }
+    }
+
+    private async Task<StavkaNarudzbe?> UcitajStavkuPoOznaciAsync(
+        string brojOznake,
+        CancellationToken cancellationToken,
+        bool zaIzmjenu = false)
+    {
+        var query = _context.StavkeNarudzbe
+            .Include(s => s.Artikal)
+            .Include(s => s.Narudzba).ThenInclude(n => n.Status)
+            .Include(s => s.Narudzba).ThenInclude(n => n.Korisnik)
+            .Include(s => s.Narudzba).ThenInclude(n => n.Logistike).ThenInclude(l => l.Status)
+            .Where(s => s.Broj_Oznake == brojOznake);
+
+        if (!zaIzmjenu)
+            query = query.AsNoTracking();
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static StavkaOznakaInfoDto MapStavkaOznakaInfo(
+        StavkaNarudzbe stavka,
+        int? korisnikId = null)
+    {
+        var narudzba = stavka.Narudzba;
+        var logistika = narudzba.Logistike
+            .FirstOrDefault(l => l.Tip == LogistikaTipovi.Preuzimanje);
+        var statusNarudzbe = narudzba.Status.Naziv;
+        var logistikaStatus = logistika?.Status.Naziv;
+        var mozePokrenuti = statusNarudzbe == NarudzbaStatusi.Gotova &&
+            (narudzba.Nacin_Predaje != NacinPredajeVrijednosti.PreuzimanjeIDostava ||
+             logistikaStatus is LogistikaStatusi.Zakazano or LogistikaStatusi.UToku);
+        var mozePotvrditi = IzracunajMozePotvrditiPreuzimanje(stavka, korisnikId);
+
+        var poruka = statusNarudzbe switch
+        {
+            NarudzbaStatusi.Gotova when korisnikId is > 0 && mozePotvrditi
+                && narudzba.Nacin_Predaje == NacinPredajeVrijednosti.PreuzimanjeIDostava =>
+                "Potvrdite preuzimanje nakon što vam radnik dostavi narudžbu.",
+            NarudzbaStatusi.Gotova when korisnikId is > 0 && mozePotvrditi =>
+                "Potvrdite preuzimanje u radnji skeniranjem ili unosom broja oznake.",
+            NarudzbaStatusi.Gotova when narudzba.Nacin_Predaje == NacinPredajeVrijednosti.PreuzimanjeIDostava
+                && logistikaStatus == LogistikaStatusi.UToku =>
+                "Dostava je već u toku. Možete nastaviti s predajom korisniku.",
+            NarudzbaStatusi.Gotova when narudzba.Nacin_Predaje == NacinPredajeVrijednosti.PreuzimanjeIDostava =>
+                "Narudžba je spremna — potvrdite da krećete u dostavu.",
+            NarudzbaStatusi.Gotova =>
+                "Narudžba je spremna za preuzimanje korisnika u radnji.",
+            NarudzbaStatusi.Preuzeta when korisnikId is > 0 =>
+                "Narudžba je već preuzeta.",
+            _ => korisnikId is > 0
+                ? $"Narudžba još nije spremna za preuzimanje (status: {statusNarudzbe})."
+                : $"Narudžba nije spremna za ovu radnju (status: {statusNarudzbe}).",
+        };
+
+        return new StavkaOznakaInfoDto
+        {
+            BrojOznake = stavka.Broj_Oznake!,
+            StavkaId = stavka.ID_Stavke,
+            ArtikalNaziv = stavka.Artikal.Naziv,
+            NarudzbaId = narudzba.ID_Narudzbe,
+            StatusNarudzbe = statusNarudzbe,
+            NacinPredaje = narudzba.Nacin_Predaje,
+            NacinPredajeNaziv = NacinPredajeNazivi.ZaPrikaz(narudzba.Nacin_Predaje),
+            AdresaDostave = logistika?.Adresa,
+            KorisnikPunoIme = $"{narudzba.Korisnik.Ime} {narudzba.Korisnik.Prezime}",
+            LogistikaStatusNaziv = logistikaStatus,
+            MozePokrenutiDostavu = mozePokrenuti,
+            MozePotvrditiPreuzimanje = mozePotvrditi,
+            Poruka = poruka,
+        };
+    }
+
+    private static bool IzracunajMozePotvrditiPreuzimanje(
+        StavkaNarudzbe stavka,
+        int? korisnikId)
+    {
+        if (korisnikId is null or <= 0)
+            return false;
+
+        var narudzba = stavka.Narudzba;
+
+        if (narudzba.FK_Korisnik != korisnikId)
+            return false;
+
+        if (narudzba.Status.Naziv != NarudzbaStatusi.Gotova)
+            return false;
+
+        var logistika = narudzba.Logistike
+            .FirstOrDefault(l => l.Tip == LogistikaTipovi.Preuzimanje);
+
+        if (logistika == null)
+            return true;
+
+        return logistika.Status.Naziv is LogistikaStatusi.Zakazano or LogistikaStatusi.UToku;
+    }
+
     private static IReadOnlyList<NarudzbaAdminAkcijaDto> IzgradiDozvoljeneAkcije(string statusNaziv)
     {
         if (statusNaziv == NarudzbaStatusi.Kreirana)
@@ -824,6 +1171,7 @@ public class NarudzbaService : INarudzbaService
                     CijenaJedinicna = s.Cijena_Jedinicna,
                     Ukupno = s.Kolicina * s.Cijena_Jedinicna,
                     Napomena = s.Napomena,
+                    BrojOznake = s.Broj_Oznake,
                     Usluge = s.Usluge
                         .OrderBy(u => u.Usluga.Naziv)
                         .Select(u => new StavkaUslugaPregledDto

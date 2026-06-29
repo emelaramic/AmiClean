@@ -4,7 +4,9 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../katalog/utils/cijena_display.dart';
+import '../../qr/screens/stavka_oznaka_skeniraj_screen.dart';
 import '../models/narudzba_pregled.dart';
+import '../models/narudzba_status.dart';
 import '../services/narudzba_service.dart';
 import 'narudzba_detalj_screen.dart';
 
@@ -78,6 +80,20 @@ class _MojeNarudzbeScreenState extends State<MojeNarudzbeScreen> {
     );
 
     if (osvjezeno == true) {
+      await _ucitajNarudzbe();
+    }
+  }
+
+  Future<void> _otvoriPotvrduPreuzimanja() async {
+    final rezultat = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute<Object?>(
+        builder: (_) => StavkaOznakaSkenirajScreen.korisnik(
+          korisnikId: widget.session.user!.id,
+        ),
+      ),
+    );
+
+    if (rezultat != null && mounted) {
       await _ucitajNarudzbe();
     }
   }
@@ -165,6 +181,9 @@ class _MojeNarudzbeScreenState extends State<MojeNarudzbeScreen> {
           return _NarudzbaKartica(
             narudzba: n,
             onTap: () => _otvoriDetalj(n),
+            onPotvrdiPreuzimanje: n.statusNaziv == NarudzbaStatusi.gotova
+                ? _otvoriPotvrduPreuzimanja
+                : null,
           );
         },
       ),
@@ -173,10 +192,15 @@ class _MojeNarudzbeScreenState extends State<MojeNarudzbeScreen> {
 }
 
 class _NarudzbaKartica extends StatelessWidget {
-  const _NarudzbaKartica({required this.narudzba, required this.onTap});
+  const _NarudzbaKartica({
+    required this.narudzba,
+    required this.onTap,
+    this.onPotvrdiPreuzimanje,
+  });
 
   final NarudzbaPregled narudzba;
   final VoidCallback onTap;
+  final VoidCallback? onPotvrdiPreuzimanje;
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +246,17 @@ class _NarudzbaKartica extends StatelessWidget {
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
+              if (onPotvrdiPreuzimanje != null) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    onPressed: onPotvrdiPreuzimanje,
+                    icon: const Icon(Icons.qr_code_scanner, size: 18),
+                    label: const Text('Potvrdi preuzimanje'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

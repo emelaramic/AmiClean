@@ -104,4 +104,18 @@ class ApiConfig {
       '$baseUrl/api/Notifikacija/OznaciSveProcitanim?korisnikId=$korisnikId';
 
   static String get kreirajRecenzijuUri => '$baseUrl/api/Recenzija/KreirajRecenziju';
+
+  static String getInfoPoOznaciUri(String unos, {int? korisnikId}) {
+    final encoded = Uri.encodeComponent(unos.trim());
+    if (korisnikId != null) {
+      return '$baseUrl/api/Narudzba/GetInfoPoOznaci?unos=$encoded&korisnikId=$korisnikId';
+    }
+    return '$baseUrl/api/Narudzba/GetInfoPoOznaci?unos=$encoded';
+  }
+
+  static String get radnikPokreniDostavuUri =>
+      '$baseUrl/api/Narudzba/RadnikPokreniDostavu';
+
+  static String get korisnikPotvrdiPreuzimanjeUri =>
+      '$baseUrl/api/Narudzba/KorisnikPotvrdiPreuzimanje';
 }

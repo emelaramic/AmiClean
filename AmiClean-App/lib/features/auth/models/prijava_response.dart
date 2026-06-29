@@ -1,10 +1,12 @@
 enum UserRole {
   korisnik,
-  admin;
+  admin,
+  radnik;
 
   static UserRole fromApiValue(String value) {
     return switch (value.toLowerCase()) {
       'admin' => UserRole.admin,
+      'radnik' => UserRole.radnik,
       _ => UserRole.korisnik,
     };
   }

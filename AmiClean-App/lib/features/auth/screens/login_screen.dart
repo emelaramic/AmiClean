@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Row(
         children: [
           _roleTab(label: 'Korisnik', index: 0),
-          _roleTab(label: 'Admin', index: 1),
+          _roleTab(label: 'Zaposlenik', index: 1),
         ],
       ),
     );
@@ -296,6 +296,15 @@ class _LoginScreenState extends State<LoginScreen> {
               }
               return null;
             },
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Administrator i radnik u radnji prijavljuju se korisničkim imenom.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 12),
           _buildOptionsRow(showForgotPassword: false),

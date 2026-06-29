@@ -4,6 +4,8 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/auth/auth_session.dart';
 import '../../katalog/utils/cijena_display.dart';
+import '../../qr/stavka_oznaka_qr.dart';
+import '../../qr/screens/stavka_oznaka_skeniraj_screen.dart';
 import '../../recenzije/services/recenzija_service.dart';
 import '../../recenzije/widgets/recenzija_sekcija.dart';
 import '../models/narudzba_pregled.dart';
@@ -145,6 +147,21 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
     Navigator.of(context).pop(_promijenjeno);
   }
 
+  Future<void> _otvoriPotvrduPreuzimanja() async {
+    final rezultat = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute<Object?>(
+        builder: (_) => StavkaOznakaSkenirajScreen.korisnik(
+          korisnikId: widget.session.user!.id,
+        ),
+      ),
+    );
+
+    if (rezultat != null && mounted) {
+      _promijenjeno = true;
+      await _ucitajDetalj(showLoading: false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,6 +298,21 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
                 : const Icon(Icons.cancel_outlined),
             label: const Text('Otkaži narudžbu'),
           ),
+        ] else if (n.statusNaziv == NarudzbaStatusi.gotova) ...[
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: _otvoriPotvrduPreuzimanja,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: const Text('Potvrdi preuzimanje'),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Skenirajte QR kod na artiklu ili unesite broj oznake ručno '
+            'kad preuzmete narudžbu u radnji ili od dostavljača.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
         ] else if (n.statusNaziv == NarudzbaStatusi.otkazana) ...[
           const SizedBox(height: 24),
           Text(
@@ -340,6 +372,10 @@ class _NarudzbaDetaljScreenState extends State<NarudzbaDetaljScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
+            if (stavka.imaBrojOznake) ...[
+              const SizedBox(height: 12),
+              StavkaOznakaQr(brojOznake: stavka.brojOznake!),
+            ],
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,

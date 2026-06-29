@@ -70,5 +70,7 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSCameraUsageDescription</key>
+		<string>Kamera je potrebna za skeniranje QR oznaka na artiklima.</string>
 	</dict>
 </plist>

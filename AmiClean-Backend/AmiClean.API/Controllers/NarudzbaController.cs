@@ -159,6 +159,49 @@ public class NarudzbaController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<ActionResult<StavkaOznakaInfoDto>> GetInfoPoOznaci(
+        [FromQuery] string unos,
+        [FromQuery] int? korisnikId = null)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.GetInfoPoOznaciAsync(unos, korisnikId));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<RadnikOznakaRezultatDto>> RadnikPokreniDostavu(
+        RadnikOznakaRequest request)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.RadnikPokreniDostavuAsync(request));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<KorisnikOznakaRezultatDto>> KorisnikPotvrdiPreuzimanje(
+        KorisnikOznakaRequest request)
+    {
+        try
+        {
+            return Ok(await _narudzbaService.KorisnikPotvrdiPreuzimanjeAsync(request));
+        }
+        catch (NarudzbaValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<Narudzba>>> GetNarudzbe()
     {
         return await _context.Narudzbe

@@ -62,6 +62,24 @@ public class NotifikacijaService : INotifikacijaService
         });
     }
 
+    public void PlanirajDostavuPokrenutu(int korisnikId, int narudzbaId)
+    {
+        if (korisnikId <= 0 || narudzbaId <= 0)
+            return;
+
+        _context.Notifikacije.Add(new Notifikacija
+        {
+            FK_Korisnik = korisnikId,
+            FK_Narudzba = narudzbaId,
+            Kanal = NotifikacijaKanali.InApp,
+            Naslov = "Dostava u toku",
+            Poruka = $"Narudžba #{narudzbaId}: vaša dostava je krenula prema vama.",
+            Datum_Slanja = DateTime.Now,
+            Status_Slanja = NotifikacijaStatusiSlanja.Poslano,
+            Procitano = false,
+        });
+    }
+
     public async Task<IReadOnlyList<NotifikacijaDto>> GetZaKorisnikaAsync(
         int korisnikId,
         CancellationToken cancellationToken = default)

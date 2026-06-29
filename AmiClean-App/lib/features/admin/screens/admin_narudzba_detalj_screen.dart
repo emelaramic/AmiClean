@@ -9,6 +9,7 @@ import '../../narudzba/models/nacin_predaje.dart';
 import '../../narudzba/models/narudzba_admin.dart';
 import '../../narudzba/models/narudzba_pregled.dart';
 import '../../narudzba/services/narudzba_service.dart';
+import '../../qr/stavka_oznaka_qr.dart';
 import '../../recenzije/widgets/recenzija_sekcija.dart';
 
 class AdminNarudzbaDetaljScreen extends StatefulWidget {
@@ -550,6 +551,10 @@ class _AdminNarudzbaDetaljScreenState extends State<AdminNarudzbaDetaljScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
+            if (stavka.imaBrojOznake) ...[
+              const SizedBox(height: 12),
+              StavkaOznakaQr(brojOznake: stavka.brojOznake!),
+            ],
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,

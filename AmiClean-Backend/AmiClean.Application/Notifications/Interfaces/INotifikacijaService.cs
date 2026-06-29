@@ -13,6 +13,8 @@ public interface INotifikacijaService
 
     void PlanirajRokAzuriran(int korisnikId, int narudzbaId, DateTime rokZavrsetka);
 
+    void PlanirajDostavuPokrenutu(int korisnikId, int narudzbaId);
+
     Task<IReadOnlyList<NotifikacijaDto>> GetZaKorisnikaAsync(
         int korisnikId,
         CancellationToken cancellationToken = default);

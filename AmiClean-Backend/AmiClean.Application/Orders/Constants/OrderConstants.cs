@@ -101,6 +101,8 @@ public static class LogistikaTipovi
 public static class LogistikaStatusi
 {
     public const string Zakazano = "Zakazano";
+    public const string UToku = "U toku";
+    public const string Zavrseno = "Zavrseno";
     public const string Otkazano = "Otkazano";
 }
 
