@@ -46,3 +46,24 @@ public class KorisnikOznakaRezultatDto
     public bool PreuzimanjePotvrdeno { get; set; }
     public string Poruka { get; set; } = null!;
 }
+
+public class RadnikDostavaPregledDto
+{
+    public int NarudzbaId { get; set; }
+    public string KorisnikPunoIme { get; set; } = null!;
+    public string? KorisnikTelefon { get; set; }
+    public string AdresaDostave { get; set; } = null!;
+    public string LogistikaStatusNaziv { get; set; } = null!;
+    public int BrojStavki { get; set; }
+    public DateTime DatumPrijema { get; set; }
+    public DateTime? RokZavrsetka { get; set; }
+    public string? VozacPunoIme { get; set; }
+    public bool JeMojaDostava { get; set; }
+    public bool MozePokrenuti { get; set; }
+}
+
+public class RadnikDostaveListaDto
+{
+    public IReadOnlyList<RadnikDostavaPregledDto> Spremne { get; set; } = [];
+    public IReadOnlyList<RadnikDostavaPregledDto> UToku { get; set; } = [];
+}

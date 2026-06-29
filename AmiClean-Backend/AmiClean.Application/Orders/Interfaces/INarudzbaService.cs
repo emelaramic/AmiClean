@@ -57,4 +57,8 @@ public interface INarudzbaService
     Task<KorisnikOznakaRezultatDto> KorisnikPotvrdiPreuzimanjeAsync(
         KorisnikOznakaRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<RadnikDostaveListaDto> GetDostaveZaRadnikaAsync(
+        int zaposlenikId,
+        CancellationToken cancellationToken = default);
 }

@@ -959,6 +959,81 @@ public class NarudzbaService : INarudzbaService
         };
     }
 
+    public async Task<RadnikDostaveListaDto> GetDostaveZaRadnikaAsync(
+        int zaposlenikId,
+        CancellationToken cancellationToken = default)
+    {
+        if (zaposlenikId <= 0)
+            throw new NarudzbaValidationException("ZaposlenikId nije ispravan.");
+
+        var zaposlenikPostoji = await _context.Zaposlenici
+            .AsNoTracking()
+            .AnyAsync(
+                z => z.ID_Zaposlenika == zaposlenikId && z.Aktivan,
+                cancellationToken);
+
+        if (!zaposlenikPostoji)
+            throw new NarudzbaValidationException("Zaposlenik nije pronađen.");
+
+        var logistike = await _context.Logistike
+            .AsNoTracking()
+            .Include(l => l.Status)
+            .Include(l => l.Vozac)
+            .Include(l => l.Narudzba).ThenInclude(n => n.Korisnik)
+            .Include(l => l.Narudzba).ThenInclude(n => n.Status)
+            .Include(l => l.Narudzba).ThenInclude(n => n.Stavke)
+            .Where(l =>
+                l.Tip == LogistikaTipovi.Preuzimanje &&
+                (l.Status.Naziv == LogistikaStatusi.Zakazano ||
+                 l.Status.Naziv == LogistikaStatusi.UToku) &&
+                l.Narudzba.Nacin_Predaje == NacinPredajeVrijednosti.PreuzimanjeIDostava &&
+                l.Narudzba.Status.Naziv == NarudzbaStatusi.Gotova)
+            .OrderByDescending(l => l.Narudzba.Datum_Prijema)
+            .ToListAsync(cancellationToken);
+
+        var spremne = new List<RadnikDostavaPregledDto>();
+        var uToku = new List<RadnikDostavaPregledDto>();
+
+        foreach (var logistika in logistike)
+        {
+            var dto = MapRadnikDostava(logistika, zaposlenikId);
+            if (dto.LogistikaStatusNaziv == LogistikaStatusi.Zakazano)
+                spremne.Add(dto);
+            else
+                uToku.Add(dto);
+        }
+
+        return new RadnikDostaveListaDto
+        {
+            Spremne = spremne,
+            UToku = uToku,
+        };
+    }
+
+    private static RadnikDostavaPregledDto MapRadnikDostava(Logistika logistika, int zaposlenikId)
+    {
+        var narudzba = logistika.Narudzba;
+        var logistikaStatus = logistika.Status.Naziv;
+        var jeMoja = logistika.FK_Vozac == zaposlenikId;
+
+        return new RadnikDostavaPregledDto
+        {
+            NarudzbaId = narudzba.ID_Narudzbe,
+            KorisnikPunoIme = $"{narudzba.Korisnik.Ime} {narudzba.Korisnik.Prezime}".Trim(),
+            KorisnikTelefon = narudzba.Korisnik.Broj_Telefona,
+            AdresaDostave = logistika.Adresa,
+            LogistikaStatusNaziv = logistikaStatus,
+            BrojStavki = narudzba.Stavke.Count,
+            DatumPrijema = narudzba.Datum_Prijema,
+            RokZavrsetka = narudzba.Rok_Zavrsetka,
+            VozacPunoIme = logistika.Vozac == null
+                ? null
+                : $"{logistika.Vozac.Ime} {logistika.Vozac.Prezime}".Trim(),
+            JeMojaDostava = jeMoja,
+            MozePokrenuti = logistikaStatus == LogistikaStatusi.Zakazano,
+        };
+    }
+
     private static string ParsirajBrojOznake(string unos)
     {
         try

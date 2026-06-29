@@ -118,4 +118,7 @@ class ApiConfig {
 
   static String get korisnikPotvrdiPreuzimanjeUri =>
       '$baseUrl/api/Narudzba/KorisnikPotvrdiPreuzimanje';
+
+  static String getDostaveZaRadnikaUri({required int zaposlenikId}) =>
+      '$baseUrl/api/Narudzba/GetDostaveZaRadnika?zaposlenikId=$zaposlenikId';
 }
