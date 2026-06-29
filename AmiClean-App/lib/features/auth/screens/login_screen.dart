@@ -195,8 +195,13 @@ class _LoginScreenState extends State<LoginScreen> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             validator: (value) {
-              if (value == null || value.trim().isEmpty) {
+              final email = value?.trim() ?? '';
+              if (email.isEmpty) {
                 return 'Email je obavezan';
+              }
+              final emailPattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+              if (!emailPattern.hasMatch(email)) {
+                return 'Unesi ispravan email (npr. ime@email.com)';
               }
               return null;
             },
@@ -223,6 +228,9 @@ class _LoginScreenState extends State<LoginScreen> {
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Lozinka je obavezna';
+              }
+              if (value.length < 6) {
+                return 'Lozinka mora imati najmanje 6 znakova';
               }
               return null;
             },

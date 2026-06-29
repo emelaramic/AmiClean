@@ -185,7 +185,12 @@ class ApiClient {
     int statusCode,
   ) {
     if (payload != null) {
-      for (final key in ['title', 'detail', 'message', 'error']) {
+      final validationMessages = _extractValidationMessages(payload);
+      if (validationMessages.isNotEmpty) {
+        return validationMessages.join(' ');
+      }
+
+      for (final key in ['message', 'detail', 'title', 'error']) {
         final value = payload[key];
         if (value is String && value.isNotEmpty) {
           return value;
@@ -198,6 +203,25 @@ class ApiClient {
     }
 
     return 'Backend je vratio grešku (HTTP $statusCode).';
+  }
+
+  List<String> _extractValidationMessages(Map<String, dynamic> payload) {
+    final errors = payload['errors'];
+    if (errors is! Map) return const [];
+
+    final messages = <String>[];
+    for (final value in errors.values) {
+      if (value is List) {
+        for (final item in value) {
+          if (item is String && item.trim().isNotEmpty) {
+            messages.add(item.trim());
+          }
+        }
+      } else if (value is String && value.trim().isNotEmpty) {
+        messages.add(value.trim());
+      }
+    }
+    return messages;
   }
 
   void dispose() => _httpClient.close();
