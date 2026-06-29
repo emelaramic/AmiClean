@@ -79,10 +79,25 @@ class _StavkaOznakaSkenirajScreenState extends State<StavkaOznakaSkenirajScreen>
       detectionSpeed: DetectionSpeed.noDuplicates,
       facing: CameraFacing.back,
     );
+    if (_imaKameru) {
+      _tabController.addListener(_onTabPromjena);
+    }
+  }
+
+  void _onTabPromjena() {
+    if (_tabController.indexIsChanging) return;
+    if (_tabController.index == 0) {
+      _scannerController.start();
+    } else {
+      _scannerController.stop();
+    }
   }
 
   @override
   void dispose() {
+    if (_imaKameru) {
+      _tabController.removeListener(_onTabPromjena);
+    }
     _tabController.dispose();
     _rucniUnosController.dispose();
     _scannerController.dispose();
@@ -222,16 +237,10 @@ class _StavkaOznakaSkenirajScreenState extends State<StavkaOznakaSkenirajScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(naslov),
-        bottom: _imaKameru
-            ? TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(icon: Icon(Icons.qr_code_scanner), text: 'Kamera'),
-                  Tab(icon: Icon(Icons.keyboard), text: 'Ručni unos'),
-                ],
-              )
-            : null,
+        title: _imaKameru
+            ? _SkenirajUnosTabBar(controller: _tabController)
+            : Text(naslov),
+        titleSpacing: _imaKameru ? 8 : null,
       ),
       body: Stack(
         children: [
@@ -281,6 +290,61 @@ class _StavkaOznakaSkenirajScreenState extends State<StavkaOznakaSkenirajScreen>
                 ),
               ),
             ),
+    );
+  }
+}
+
+class _SkenirajUnosTabBar extends StatelessWidget {
+  const _SkenirajUnosTabBar({required this.controller});
+
+  final TabController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              _tab(label: 'Skeniranje', index: 0),
+              _tab(label: 'Unos', index: 1),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _tab({required String label, required int index}) {
+    final selected = controller.index == index;
+    return Expanded(
+      child: Material(
+        color: selected
+            ? Colors.white.withValues(alpha: 0.22)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: () => controller.animateTo(index),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
